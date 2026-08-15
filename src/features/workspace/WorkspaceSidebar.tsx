@@ -18,6 +18,7 @@ import {
   type SessionActionTarget,
 } from './sidebar-sessions.ts'
 import { SessionRenameDialog } from './SessionRenameDialog.tsx'
+import { splitWorkspacePath } from './workspace-path.ts'
 import { maxWorkspaceSidebarWidth, minWorkspaceSidebarWidth } from './workspace-sidebar.ts'
 
 interface ContextMenuState {
@@ -75,6 +76,7 @@ export function WorkspaceSidebar({
   onError,
 }: WorkspaceSidebarProps) {
   const [openingSessionPath, setOpeningSessionPath] = useState('')
+  const { parent: workspaceParent, basename: workspaceBasename } = splitWorkspacePath(workspacePath)
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
   const [contextMenuPosition, setContextMenuPosition] = useState({ left: 0, top: 0 })
   const [renameTarget, setRenameTarget] = useState<SessionActionTarget | null>(null)
@@ -283,8 +285,10 @@ export function WorkspaceSidebar({
           >
             <WorkspaceIcon />
             <div className='workspace-path-copy'>
-              <span>Current directory</span>
-              <strong>{workspacePath}</strong>
+              <span className='workspace-path-parent'>
+                {workspaceParent || 'Current directory'}
+              </span>
+              <strong className='workspace-path-basename'>{workspaceBasename}</strong>
             </div>
             <ChevronIcon />
           </button>

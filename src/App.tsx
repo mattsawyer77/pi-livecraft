@@ -50,6 +50,7 @@ import {
 import { RightSidebar } from './features/right-sidebar/RightSidebar.tsx'
 import { quotaProviderForModel } from './features/quotas/quota-display.ts'
 import { DirectoryPicker } from './features/workspace/DirectoryPicker.tsx'
+import { formatDocumentTitle } from './features/workspace/document-title.ts'
 import { sidebarSessions } from './features/workspace/sidebar-sessions.ts'
 import { useWorkspaceSessions } from './features/workspace/useWorkspaceSessions.ts'
 import { WorkspaceSidebar } from './features/workspace/WorkspaceSidebar.tsx'
@@ -346,6 +347,11 @@ function App() {
     onWorkspaceSelected: handleWorkspaceSelected,
   })
   selectedIdRef.current = selectedId
+
+  useEffect(() => {
+    const session = sessions.find((candidate) => candidate.id === selectedId)
+    document.title = formatDocumentTitle(workspacePath, session?.name)
+  }, [workspacePath, selectedId, sessions])
 
   const startAndSelectSession = useCallback(
     (
