@@ -25,6 +25,41 @@ test('writes versioned desktop preferences without launch secrets', async (t) =>
   assert.equal(stored.includes('apiSecret'), false)
 })
 
+test('preserves existing preferences across independent saves', async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), 'pi-livecraft-settings-'))
+  t.after(() => rm(directory, { force: true, recursive: true }))
+  const store = createDesktopSettingsStore(directory)
+  await store.save({
+    themePreferences: { active: 'dark', themes: [] },
+    uiPreferences: { workspacePath: '/workspace' },
+    tabs: [],
+    version: 1,
+  })
+  await store.save({ tabs: [{ sessionId: 'session-1' }], version: 1 })
+  assert.deepEqual(await store.load(), {
+    themePreferences: { active: 'dark', themes: [] },
+    uiPreferences: { workspacePath: '/workspace' },
+    tabs: [{ sessionId: 'session-1' }],
+    version: 1,
+  })
+})
+
+test('merges concurrent desktop preference saves', async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), 'pi-livecraft-settings-'))
+  t.after(() => rm(directory, { force: true, recursive: true }))
+  const store = createDesktopSettingsStore(directory)
+  await Promise.all([
+    store.save({ themePreferences: { active: 'dark', themes: [] }, tabs: [], version: 1 }),
+    store.save({ tabs: [], uiPreferences: { workspacePath: '/workspace' }, version: 1 }),
+  ])
+  assert.deepEqual(await store.load(), {
+    themePreferences: { active: 'dark', themes: [] },
+    tabs: [],
+    uiPreferences: { workspacePath: '/workspace' },
+    version: 1,
+  })
+})
+
 test('persists validated desktop UI preferences', async (t) => {
   const directory = await mkdtemp(join(tmpdir(), 'pi-livecraft-settings-'))
   t.after(() => rm(directory, { force: true, recursive: true }))

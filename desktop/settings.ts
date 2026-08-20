@@ -20,6 +20,7 @@ const defaultPreferences = (): DesktopPreferences => ({ tabs: [], version: 1 })
 /** Stores the desktop-only durable settings in Electron's platform user-data directory. */
 export function createDesktopSettingsStore(userDataPath: string): DesktopSettingsStore {
   const settingsPath = join(userDataPath, SETTINGS_FILE)
+  let saveQueue = Promise.resolve()
 
   return {
     async load(): Promise<DesktopPreferences> {
@@ -31,11 +32,17 @@ export function createDesktopSettingsStore(userDataPath: string): DesktopSetting
     },
 
     async save(preferences: DesktopPreferences): Promise<void> {
-      const serialized = serializePreferences(preferences)
-      const temporaryPath = `${settingsPath}.${process.pid}.${randomUUID()}.tmp`
-      await mkdir(userDataPath, { mode: 0o700, recursive: true })
-      await writeFile(temporaryPath, `${JSON.stringify(serialized, null, 2)}\n`, { mode: 0o600 })
-      await rename(temporaryPath, settingsPath)
+      const write = async (): Promise<void> => {
+        const current = await readExistingPreferences(settingsPath)
+        const serialized = serializePreferences(mergePreferences(current, preferences))
+        const temporaryPath = `${settingsPath}.${process.pid}.${randomUUID()}.tmp`
+        await mkdir(userDataPath, { mode: 0o700, recursive: true })
+        await writeFile(temporaryPath, `${JSON.stringify(serialized, null, 2)}\n`, { mode: 0o600 })
+        await rename(temporaryPath, settingsPath)
+      }
+      const pending = saveQueue.then(write, write)
+      saveQueue = pending.catch(() => undefined)
+      await pending
     },
   }
 }
@@ -48,6 +55,29 @@ export function migrateBrowserPreferences(
   const selectedSessionId = stored['pi-livecraft.selected-session']
   if (preferences.selectedSessionId || !selectedSessionId?.trim()) return preferences
   return { ...preferences, selectedSessionId }
+}
+
+async function readExistingPreferences(settingsPath: string): Promise<DesktopPreferences> {
+  try {
+    return parsePreferences(JSON.parse(await readFile(settingsPath, 'utf8')))
+  } catch {
+    return defaultPreferences()
+  }
+}
+
+function mergePreferences(
+  current: DesktopPreferences,
+  update: DesktopPreferences,
+): DesktopPreferences {
+  return {
+    ...current,
+    ...update,
+    themePreferences: update.themePreferences ?? current.themePreferences,
+    ...(Object.keys({ ...current.uiPreferences, ...update.uiPreferences }).length > 0
+      ? { uiPreferences: { ...current.uiPreferences, ...update.uiPreferences } }
+      : {}),
+    window: update.window ?? current.window,
+  }
 }
 
 function parsePreferences(value: unknown): DesktopPreferences {
