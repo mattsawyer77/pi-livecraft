@@ -8,7 +8,7 @@ import {
   packagedRuntimeEntries,
   type DesktopServices,
 } from './services.ts'
-import { createDesktopSettingsStore } from './settings.ts'
+import { createDesktopSettingsStore, saveDesktopWindowBounds } from './settings.ts'
 import type { DesktopBootstrap, DesktopPreferences } from './shared.ts'
 
 let services: DesktopServices | undefined
@@ -88,8 +88,9 @@ void app
     })
     configureNavigation(window, bootstrap.backendUrl)
     window.on('close', () => {
-      const bounds = window.getBounds()
-      void store.save({ ...bootstrap.preferences, window: bounds })
+      void saveDesktopWindowBounds(store, window.getBounds()).then(async () => {
+        bootstrap = { ...bootstrap, preferences: await store.load() }
+      })
     })
 
     if (bootstrap.pi.ready) await window.loadURL(bootstrap.backendUrl)

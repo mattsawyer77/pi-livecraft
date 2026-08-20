@@ -3,7 +3,11 @@ import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import test from 'node:test'
-import { createDesktopSettingsStore, migrateBrowserPreferences } from '../desktop/settings.ts'
+import {
+  createDesktopSettingsStore,
+  migrateBrowserPreferences,
+  saveDesktopWindowBounds,
+} from '../desktop/settings.ts'
 
 test('writes versioned desktop preferences without launch secrets', async (t) => {
   const directory = await mkdtemp(join(tmpdir(), 'pi-livecraft-settings-'))
@@ -23,6 +27,20 @@ test('writes versioned desktop preferences without launch secrets', async (t) =>
     version: 1,
   })
   assert.equal(stored.includes('apiSecret'), false)
+})
+
+test('saves window bounds without overwriting newer renderer preferences', async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), 'pi-livecraft-settings-'))
+  t.after(() => rm(directory, { force: true, recursive: true }))
+  const store = createDesktopSettingsStore(directory)
+  await store.save({ themePreferences: { active: 'dark', themes: [] }, tabs: [], version: 1 })
+  await saveDesktopWindowBounds(store, { height: 900, width: 1400 })
+  assert.deepEqual(await store.load(), {
+    themePreferences: { active: 'dark', themes: [] },
+    tabs: [],
+    version: 1,
+    window: { height: 900, width: 1400 },
+  })
 })
 
 test('preserves existing preferences across independent saves', async (t) => {

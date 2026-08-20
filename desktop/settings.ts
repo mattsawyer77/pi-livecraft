@@ -13,6 +13,7 @@ const SETTINGS_FILE = 'settings.json'
 export interface DesktopSettingsStore {
   load(): Promise<DesktopPreferences>
   save(preferences: DesktopPreferences): Promise<void>
+  update(updater: (preferences: DesktopPreferences) => DesktopPreferences): Promise<void>
 }
 
 const defaultPreferences = (): DesktopPreferences => ({ tabs: [], version: 1 })
@@ -21,6 +22,22 @@ const defaultPreferences = (): DesktopPreferences => ({ tabs: [], version: 1 })
 export function createDesktopSettingsStore(userDataPath: string): DesktopSettingsStore {
   const settingsPath = join(userDataPath, SETTINGS_FILE)
   let saveQueue = Promise.resolve()
+
+  const enqueue = (
+    updater: (preferences: DesktopPreferences) => DesktopPreferences,
+  ): Promise<void> => {
+    const write = async (): Promise<void> => {
+      const current = await readExistingPreferences(settingsPath)
+      const serialized = serializePreferences(updater(current))
+      const temporaryPath = `${settingsPath}.${process.pid}.${randomUUID()}.tmp`
+      await mkdir(userDataPath, { mode: 0o700, recursive: true })
+      await writeFile(temporaryPath, `${JSON.stringify(serialized, null, 2)}\n`, { mode: 0o600 })
+      await rename(temporaryPath, settingsPath)
+    }
+    const pending = saveQueue.then(write, write)
+    saveQueue = pending.catch(() => undefined)
+    return pending
+  }
 
   return {
     async load(): Promise<DesktopPreferences> {
@@ -31,20 +48,22 @@ export function createDesktopSettingsStore(userDataPath: string): DesktopSetting
       }
     },
 
-    async save(preferences: DesktopPreferences): Promise<void> {
-      const write = async (): Promise<void> => {
-        const current = await readExistingPreferences(settingsPath)
-        const serialized = serializePreferences(mergePreferences(current, preferences))
-        const temporaryPath = `${settingsPath}.${process.pid}.${randomUUID()}.tmp`
-        await mkdir(userDataPath, { mode: 0o700, recursive: true })
-        await writeFile(temporaryPath, `${JSON.stringify(serialized, null, 2)}\n`, { mode: 0o600 })
-        await rename(temporaryPath, settingsPath)
-      }
-      const pending = saveQueue.then(write, write)
-      saveQueue = pending.catch(() => undefined)
-      await pending
+    save(preferences: DesktopPreferences): Promise<void> {
+      return enqueue((current) => mergePreferences(current, preferences))
+    },
+
+    update(updater: (preferences: DesktopPreferences) => DesktopPreferences): Promise<void> {
+      return enqueue(updater)
     },
   }
+}
+
+/** Saves only window bounds, preserving renderer preferences saved through IPC. */
+export function saveDesktopWindowBounds(
+  store: DesktopSettingsStore,
+  window: DesktopWindowState,
+): Promise<void> {
+  return store.update((preferences) => ({ ...preferences, window }))
 }
 
 /** Imports only the documented selected-session browser fallback into absent disk preferences. */
