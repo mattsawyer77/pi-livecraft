@@ -46,6 +46,9 @@ void app
           ? packagedDistDirectory(resourceRoot)
           : resolve(resourceRoot, 'dist'),
         piPath: pi.path,
+        runtimeRoot: app.isPackaged
+          ? resolve(resourceRoot, 'app.asar.unpacked')
+          : resourceRoot,
       })
       try {
         await services.start()

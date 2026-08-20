@@ -9,6 +9,11 @@ test('defines Electron desktop build and package scripts', () => {
   assert.equal(typeof packageJson.scripts['desktop:package'], 'string')
 })
 
+test('keeps Electron entrypoints external to avoid dynamic CommonJS requires', () => {
+  const build = readFileSync(new URL('../desktop/build-runtime.mjs', import.meta.url), 'utf8')
+  assert.match(build, /\['electron'\]/)
+})
+
 test('desktop builder excludes Pi and includes executable Livecraft runtime directories', () => {
   const config = readFileSync(new URL('../desktop/electron-builder.yml', import.meta.url), 'utf8')
   assert.match(config, /- dist-runtime\/\*\*/)

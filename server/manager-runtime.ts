@@ -7,7 +7,8 @@ import { isObject } from '../shared/is-object.ts'
 export const managerRuntimeManifestPath = fileURLToPath(
   new URL('./manager-runtime-files.json', import.meta.url),
 )
-const repositoryRoot = fileURLToPath(new URL('../', import.meta.url))
+const repositoryRoot = process.env.PI_LIVECRAFT_RUNTIME_ROOT
+  ?? fileURLToPath(new URL('../', import.meta.url))
 
 export interface ManagerRuntimeRevision {
   files: string[]

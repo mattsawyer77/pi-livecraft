@@ -2,7 +2,8 @@ import { spawn, type ChildProcess } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 import { calculateManagerRuntimeRevision } from './manager-runtime.ts'
 
-const managerEntry = fileURLToPath(new URL('./manager.ts', import.meta.url))
+const managerEntry = process.env.PI_LIVECRAFT_MANAGER_ENTRY
+  ?? fileURLToPath(new URL('./manager.ts', import.meta.url))
 const restartExitCode = 75
 let child: ChildProcess | undefined
 let failureHold: NodeJS.Timeout | undefined
