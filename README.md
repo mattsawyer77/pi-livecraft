@@ -81,6 +81,18 @@ WSL/Linux and native Windows have separate global npm paths: run `npm link` from
 
 Open [http://127.0.0.1:5173](http://127.0.0.1:5173) and you should see Livecraft.
 
+## macOS desktop app (unsigned preview)
+
+The desktop build packages Pi Livecraft, not Pi. Install and configure Pi first, then open **Pi Livecraft.app**. On first launch the app searches your login-shell PATH, `/opt/homebrew/bin/pi`, and `/usr/local/bin/pi`. Set an absolute Pi executable path in Settings if discovery fails, then restart the app.
+
+The supported reproducible development shell is `nix develop`. Build the native Apple Silicon desktop ZIP with `nix build .#desktop`; Nix links the artifact at `result/`. The lower-level `npm run desktop:package` command remains useful while debugging Electron, but it is not the release pipeline. The first release does not provide a DMG, universal binary, cross-compilation, signing, notarization, or automatic updates.
+
+Desktop preferences are stored in `~/Library/Application Support/Pi Livecraft/settings.json`. This file contains Livecraft settings such as the Pi path and restored tabs; it does not contain Pi credentials, provider settings, or the per-launch local API secret.
+
+The preview app is unsigned. If macOS blocks the first launch, open it from Finder with Control-click → Open, then confirm Open. Do not bypass Gatekeeper for an artifact you did not obtain from a trusted source.
+
+One app window supports multiple session tabs. Closing a tab only hides it from the tab strip; it does not stop running Pi work or erase session history.
+
 ## What is already in the box
 
 > Everything was designed to be easily navigable, extensible, and craftable by an AI agent, so you can try ideas quickly, just like with Pi!

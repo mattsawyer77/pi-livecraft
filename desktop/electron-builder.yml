@@ -12,6 +12,9 @@ files:
   - node_modules/**
   - "!node_modules/.cache/**"
   - "!node_modules/**/{test,tests,*.map}"
+asarUnpack:
+  - dist-runtime/**
+  - pi-extensions/**
 mac:
   target:
     - target: zip
