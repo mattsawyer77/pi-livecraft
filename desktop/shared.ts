@@ -12,6 +12,7 @@ export interface DesktopWindowState {
 export interface DesktopPreferences {
   piPath?: string
   selectedSessionId?: string
+  themePreferences?: { active: string; themes: unknown[]; builtInOverrides?: unknown }
   tabs: DesktopTabState[]
   version: 1
   window?: DesktopWindowState

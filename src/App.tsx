@@ -88,6 +88,7 @@ import {
   setActiveTheme,
   shadowForMode,
   updateThemeColor,
+  type ThemePreferences,
   type ThemeVariable,
 } from './features/settings/themes.ts'
 import {
@@ -208,7 +209,10 @@ function App({ desktopBootstrap = null }: AppProps) {
   )
 
   // Preferences and commands
-  const [themePreferences, setThemePreferences] = useState(() => readThemePreferences())
+  const [themePreferences, setThemePreferences] = useState<ThemePreferences>(() => {
+    const desktopThemePreferences = desktopBootstrap?.preferences.themePreferences
+    return desktopThemePreferences as ThemePreferences | undefined ?? readThemePreferences()
+  })
   const activeTheme = useMemo(() => resolveActiveTheme(themePreferences), [themePreferences])
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -526,8 +530,11 @@ function App({ desktopBootstrap = null }: AppProps) {
   }, [])
 
   useEffect(() => {
-    persistThemePreferences(themePreferences)
-  }, [themePreferences])
+    if (desktopPreferences) {
+      if (JSON.stringify(desktopPreferences.themePreferences) !== JSON.stringify(themePreferences))
+        updateDesktopPreferences({ themePreferences })
+    } else persistThemePreferences(themePreferences)
+  }, [desktopPreferences, themePreferences, updateDesktopPreferences])
 
   useEffect(() => {
     const root = document.documentElement
@@ -1372,8 +1379,14 @@ function App({ desktopBootstrap = null }: AppProps) {
             <>
               <section className='welcome'>
                 <span className='brand-mark large'>π</span>
-                <h1>Control Pi from your browser</h1>
-                <p>Create a local session to access your models, agents, tools, and commands.</p>
+                {!desktopPreferences && (
+                  <>
+                    <h1>Control Pi from your browser</h1>
+                    <p>
+                      Create a local session to access your models, agents, tools, and commands.
+                    </p>
+                  </>
+                )}
               </section>
               <ToastStack onDismiss={dismissToast} standalone toasts={visibleToasts} />
             </>
@@ -1496,7 +1509,7 @@ function App({ desktopBootstrap = null }: AppProps) {
             window.localStorage.setItem('pi-livecraft.shortcuts', JSON.stringify(defaultShortcuts))
           }}
           onClose={() => setSettingsOpen(false)}
-          piPath={desktopPreferences?.piPath}
+          piPath={desktopPreferences?.piPath ?? desktopBootstrap?.pi.path}
           onPiPathChange={desktopPreferences
             ? (path) => {
               const piPath = path.trim()

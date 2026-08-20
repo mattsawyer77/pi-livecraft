@@ -50,12 +50,17 @@ function parsePreferences(value: unknown): DesktopPreferences {
   if (value.piPath !== undefined && typeof value.piPath !== 'string') return defaultPreferences()
   if (value.selectedSessionId !== undefined && typeof value.selectedSessionId !== 'string')
     return defaultPreferences()
+  if (value.themePreferences !== undefined && !isThemePreferences(value.themePreferences))
+    return defaultPreferences()
   if (value.window !== undefined && !isWindowState(value.window)) return defaultPreferences()
 
   return {
     ...(typeof value.piPath === 'string' ? { piPath: value.piPath } : {}),
     ...(typeof value.selectedSessionId === 'string'
       ? { selectedSessionId: value.selectedSessionId }
+      : {}),
+    ...(isThemePreferences(value.themePreferences)
+      ? { themePreferences: value.themePreferences }
       : {}),
     tabs: value.tabs,
     version: 1,
@@ -69,10 +74,19 @@ function serializePreferences(preferences: DesktopPreferences): DesktopPreferenc
     ...(typeof preferences.selectedSessionId === 'string'
       ? { selectedSessionId: preferences.selectedSessionId }
       : {}),
+    ...(isThemePreferences(preferences.themePreferences)
+      ? { themePreferences: preferences.themePreferences }
+      : {}),
     tabs: preferences.tabs.map(({ sessionId }) => ({ sessionId })),
     version: 1,
     ...(isWindowState(preferences.window) ? { window: preferences.window } : {}),
   }
+}
+
+function isThemePreferences(
+  value: unknown,
+): value is NonNullable<DesktopPreferences['themePreferences']> {
+  return isRecord(value) && typeof value.active === 'string' && Array.isArray(value.themes)
 }
 
 function isTabs(value: unknown): value is DesktopTabState[] {

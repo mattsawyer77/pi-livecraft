@@ -25,6 +25,15 @@ test('writes versioned desktop preferences without launch secrets', async (t) =>
   assert.equal(stored.includes('apiSecret'), false)
 })
 
+test('persists desktop-owned theme preferences', async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), 'pi-livecraft-settings-'))
+  t.after(() => rm(directory, { force: true, recursive: true }))
+  const store = createDesktopSettingsStore(directory)
+  const themePreferences = { active: 'dark', themes: [] }
+  await store.save({ tabs: [], themePreferences, version: 1 })
+  assert.deepEqual(await store.load(), { tabs: [], themePreferences, version: 1 })
+})
+
 test('serializes concurrent preference writes without losing the settings file', async (t) => {
   const directory = await mkdtemp(join(tmpdir(), 'pi-livecraft-settings-'))
   t.after(() => rm(directory, { force: true, recursive: true }))
