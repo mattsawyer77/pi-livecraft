@@ -39,6 +39,7 @@ import type {
   SessionSnapshot,
 } from '../shared/types.ts'
 import { isObject } from '../shared/is-object.ts'
+import { authorizeLocalRequest } from './local-auth.ts'
 
 const host = '127.0.0.1'
 const port = readPort('PI_LIVECRAFT_BACKEND_PORT', 43_121)
@@ -47,7 +48,12 @@ const manager = new ManagerClient(host, managerPort)
 const eventClients = new Set<ServerResponse>()
 const liveSessionEvents = new Map<string, LiveSessionEvents>()
 let piEventSequence = 0
-const distDirectory = fileURLToPath(new URL('../dist/', import.meta.url))
+const configuredDistDirectory = process.env.PI_LIVECRAFT_DIST_DIRECTORY
+const distDirectory =
+  configuredDistDirectory && resolve(configuredDistDirectory) === configuredDistDirectory
+    ? configuredDistDirectory
+    : fileURLToPath(new URL('../dist/', import.meta.url))
+const apiSecret = process.env.PI_LIVECRAFT_API_SECRET
 const quotas = new QuotaService(manager)
 const managerRuntime = new ManagerRuntimeMonitor(manager, (status) => {
   broadcast({ kind: 'event', event: 'manager_status', sessionId: '', data: status })
@@ -97,6 +103,10 @@ async function route(request: IncomingMessage, response: ServerResponse): Promis
   const url = new URL(request.url ?? '/', `http://${host}`)
 
   if (method === 'GET' && url.pathname === '/api/health') {
+    if (!authorizeLocalRequest(request, apiSecret)) {
+      sendJson(response, 401, { error: 'Unauthorized' })
+      return
+    }
     sendJson(response, manager.connected ? 200 : 503, {
       ok: true,
       managerConnected: manager.connected,
@@ -105,6 +115,16 @@ async function route(request: IncomingMessage, response: ServerResponse): Promis
   }
 
   if (method === 'GET' && url.pathname === '/api/events') {
+    const authorized = authorizeLocalRequest(request, apiSecret)
+      || (typeof url.searchParams.get('token') === 'string'
+        && authorizeLocalRequest(
+          { headers: { authorization: `Bearer ${url.searchParams.get('token')}` } },
+          apiSecret,
+        ))
+    if (!authorized) {
+      sendJson(response, 401, { error: 'Unauthorized' })
+      return
+    }
     response.writeHead(200, {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
@@ -133,6 +153,11 @@ async function route(request: IncomingMessage, response: ServerResponse): Promis
     )
     eventClients.add(response)
     request.on('close', () => eventClients.delete(response))
+    return
+  }
+
+  if (url.pathname.startsWith('/api/') && !authorizeLocalRequest(request, apiSecret)) {
+    sendJson(response, 401, { error: 'Unauthorized' })
     return
   }
 
