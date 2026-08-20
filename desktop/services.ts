@@ -20,6 +20,7 @@ export interface DesktopServicesOptions {
   distDirectory: string
   managerEntry: string
   piPath: string
+  extensionsDirectory: string
   runtimeRoot: string
   backendEntry: string
   spawnProcess?: typeof spawn
@@ -57,6 +58,7 @@ export function createDesktopServices(options: DesktopServicesOptions): DesktopS
         PI_LIVECRAFT_API_SECRET: runtime.apiSecret,
         PI_LIVECRAFT_BACKEND_PORT: String(runtime.backendPort),
         PI_LIVECRAFT_DIST_DIRECTORY: options.distDirectory,
+        PI_LIVECRAFT_EXTENSIONS_DIRECTORY: options.extensionsDirectory,
         PI_LIVECRAFT_MANAGER_ENTRY: options.managerEntry.replace(
           'manager-supervisor.js',
           'manager.js',

@@ -7,6 +7,8 @@ const bundles = [
   ['server/backend.ts', 'dist-runtime/backend.js'],
   ['server/manager-supervisor.ts', 'dist-runtime/manager-supervisor.js'],
   ['server/manager.ts', 'dist-runtime/manager.js'],
+  ['pi-extensions/ask-user-question.ts', 'dist-runtime/extensions/ask-user-question.js'],
+  ['pi-extensions/quotas.ts', 'dist-runtime/extensions/quotas.js'],
 ]
 
 await Promise.all(
@@ -17,7 +19,9 @@ await Promise.all(
       external: entryPoint.startsWith('desktop/') ? ['electron'] : [],
       format: entryPoint.endsWith('preload.ts') ? 'cjs' : 'esm',
       outfile,
-      packages: entryPoint.startsWith('server/') ? 'external' : 'bundle',
+      packages: entryPoint.startsWith('server/') || entryPoint.startsWith('pi-extensions/')
+        ? 'external'
+        : 'bundle',
       platform: 'node',
       sourcemap: false,
     })

@@ -46,6 +46,9 @@ void app
           ? packagedDistDirectory(resourceRoot)
           : resolve(resourceRoot, 'dist'),
         piPath: pi.path,
+        extensionsDirectory: app.isPackaged
+          ? resolve(resourceRoot, 'app.asar.unpacked', 'dist-runtime', 'extensions')
+          : resolve(resourceRoot, 'dist-runtime', 'extensions'),
         runtimeRoot: app.isPackaged
           ? resolve(resourceRoot, 'app.asar.unpacked')
           : resourceRoot,

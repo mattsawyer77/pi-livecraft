@@ -2,7 +2,7 @@ import { spawn, type ChildProcess, type ChildProcessWithoutNullStreams } from 'n
 import { randomUUID } from 'node:crypto'
 import { EventEmitter } from 'node:events'
 import { homedir } from 'node:os'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { JsonLineDecoder, MAX_SESSION_RECORD_SIZE, encodeJsonLine } from './jsonl.ts'
 import { resolvePiLauncher } from './pi-launcher.ts'
@@ -10,6 +10,13 @@ import type { JsonObject } from '../shared/types.ts'
 import { isObject } from '../shared/is-object.ts'
 
 const activeChildren = new Set<ChildProcessWithoutNullStreams>()
+
+function livecraftExtensionPath(name: string): string {
+  const directory = process.env.PI_LIVECRAFT_EXTENSIONS_DIRECTORY
+  return directory
+    ? resolve(directory, `${name}.js`)
+    : fileURLToPath(new URL(`../pi-extensions/${name}.ts`, import.meta.url))
+}
 
 /** Dedicated Pi profile directory for isolated prompts so model/thinking defaults never leak into the user's main config. */
 export const ISOLATED_AGENT_DIR = join(homedir(), '.pi', 'livecraft-isolated')
@@ -69,9 +76,9 @@ export class PiProcess extends EventEmitter {
         '--mode',
         'rpc',
         '--extension',
-        fileURLToPath(new URL('../pi-extensions/ask-user-question.ts', import.meta.url)),
+        livecraftExtensionPath('ask-user-question'),
         '--extension',
-        fileURLToPath(new URL('../pi-extensions/quotas.ts', import.meta.url)),
+        livecraftExtensionPath('quotas'),
         ...(sessionPath ? ['--session', sessionPath] : ['--session-id', sessionId]),
       ]
 
