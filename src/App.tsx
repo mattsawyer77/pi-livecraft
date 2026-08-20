@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
-import type { DesktopBootstrap } from '../desktop/shared.ts'
+import type { DesktopBootstrap, DesktopPreferences } from '../desktop/shared.ts'
 import './App.css'
+import { applyDesktopPreference } from './desktop.ts'
 import {
   commitChanges,
   createSession,
@@ -129,7 +130,28 @@ function DesktopSetup({ bootstrap }: { bootstrap: DesktopBootstrap }) {
 }
 
 /** Orchestrates workspace state, Pi events, and UI panels. */
-function App() {
+function App({ desktopBootstrap = null }: AppProps) {
+  const [desktopPreferences, setDesktopPreferences] = useState<DesktopPreferences | null>(
+    () => desktopBootstrap?.preferences ?? null,
+  )
+  const updateDesktopPreferences = useCallback(
+    (update: Parameters<typeof applyDesktopPreference>[1]) => {
+      setDesktopPreferences((current) => {
+        if (!current) return current
+        const next = applyDesktopPreference(current, update)
+        void (globalThis as unknown as {
+          piLivecraftDesktop?: {
+            savePreferences: (preferences: DesktopPreferences) => Promise<void>
+          }
+        })
+          .piLivecraftDesktop
+          ?.savePreferences(next)
+        return next
+      })
+    },
+    [],
+  )
+
   // Workspace and sessions
   const [compactingSessionIds, setCompactingSessionIds] = useState<ReadonlySet<string>>(new Set())
 
@@ -1445,6 +1467,13 @@ function App() {
             window.localStorage.setItem('pi-livecraft.shortcuts', JSON.stringify(defaultShortcuts))
           }}
           onClose={() => setSettingsOpen(false)}
+          piPath={desktopPreferences?.piPath}
+          onPiPathChange={desktopPreferences
+            ? (path) => {
+              const piPath = path.trim()
+              updateDesktopPreferences({ piPath: piPath || undefined })
+            }
+            : undefined}
         />
       )}
     </div>
@@ -1502,7 +1531,7 @@ function messageOf(cause: unknown): string {
 function RootApp({ desktopBootstrap = null }: AppProps) {
   if (desktopBootstrap && !desktopBootstrap.pi.ready)
     return <DesktopSetup bootstrap={desktopBootstrap} />
-  return <App />
+  return <App desktopBootstrap={desktopBootstrap} />
 }
 
 export default RootApp

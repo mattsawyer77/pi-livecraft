@@ -58,6 +58,8 @@ interface SettingsPanelProps {
   onResetTheme: (id: string) => void
   onReset: () => void
   onClose: () => void
+  piPath?: string
+  onPiPathChange?: (path: string) => void
 }
 
 // ── Section components ─────────────────────────────────────────────
@@ -336,6 +338,8 @@ export function SettingsPanel({
   onResetTheme,
   onReset,
   onClose,
+  piPath,
+  onPiPathChange,
 }: SettingsPanelProps) {
   const [activeTab, setActiveTab] = useState<SettingsTabId>('themes')
   const [capturing, setCapturing] = useState<CommandId | null>(null)
@@ -384,6 +388,18 @@ export function SettingsPanel({
           ))}
         </div>
         <section className='settings-content'>
+          {onPiPathChange && (
+            <label className='desktop-setting-field'>
+              <span>Pi executable</span>
+              <input
+                onChange={(event) => onPiPathChange(event.target.value)}
+                placeholder='/opt/homebrew/bin/pi'
+                type='text'
+                value={piPath ?? ''}
+              />
+              <small>Restart Pi Livecraft after changing this path.</small>
+            </label>
+          )}
           {activeTab === 'themes' && (
             <TabPanel key='themes' id='settings-tab-themes' labelledBy='settings-tab-btn-themes'>
               <ThemeSettings

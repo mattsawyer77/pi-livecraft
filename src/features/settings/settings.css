@@ -59,6 +59,23 @@
   color: var(--muted);
   font-size: 22px;
 }
+.desktop-setting-field {
+  display: grid;
+  gap: 6px;
+  margin: 16px 16px 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.desktop-setting-field input {
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--canvas);
+  color: var(--ink);
+  padding: 8px 10px;
+}
+.desktop-setting-field small {
+  color: var(--muted);
+}
 .settings-content {
   flex: 1;
   min-height: 0;
