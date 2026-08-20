@@ -15,7 +15,7 @@ await Promise.all(
       bundle: true,
       entryPoints: [entryPoint],
       external: entryPoint.startsWith('desktop/') ? ['electron'] : [],
-      format: 'esm',
+      format: entryPoint.endsWith('preload.ts') ? 'cjs' : 'esm',
       outfile,
       packages: entryPoint.startsWith('server/') ? 'external' : 'bundle',
       platform: 'node',

@@ -25,6 +25,17 @@ test('writes versioned desktop preferences without launch secrets', async (t) =>
   assert.equal(stored.includes('apiSecret'), false)
 })
 
+test('serializes concurrent preference writes without losing the settings file', async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), 'pi-livecraft-settings-'))
+  t.after(() => rm(directory, { force: true, recursive: true }))
+  const store = createDesktopSettingsStore(directory)
+  await Promise.all([
+    store.save({ piPath: '/one/pi', tabs: [], version: 1 }),
+    store.save({ piPath: '/two/pi', tabs: [], version: 1 }),
+  ])
+  assert.match((await store.load()).piPath ?? '', /^\/(one|two)\/pi$/)
+})
+
 test('migrates browser values only into missing desktop fields', () => {
   assert.deepEqual(
     migrateBrowserPreferences(

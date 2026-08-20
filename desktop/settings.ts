@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { DesktopPreferences, DesktopTabState, DesktopWindowState } from './shared.ts'
@@ -26,7 +27,7 @@ export function createDesktopSettingsStore(userDataPath: string): DesktopSetting
 
     async save(preferences: DesktopPreferences): Promise<void> {
       const serialized = serializePreferences(preferences)
-      const temporaryPath = `${settingsPath}.${process.pid}.tmp`
+      const temporaryPath = `${settingsPath}.${process.pid}.${randomUUID()}.tmp`
       await mkdir(userDataPath, { mode: 0o700, recursive: true })
       await writeFile(temporaryPath, `${JSON.stringify(serialized, null, 2)}\n`, { mode: 0o600 })
       await rename(temporaryPath, settingsPath)
