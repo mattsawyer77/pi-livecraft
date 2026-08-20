@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import type { DesktopBootstrap } from '../desktop/shared.ts'
 import './App.css'
 import {
   commitChanges,
@@ -112,6 +113,21 @@ function nextConversationView(current: ConversationView): ConversationView {
   if (current === 'semi-detailed') return 'detailed'
   return 'simple'
 }
+interface AppProps {
+  desktopBootstrap?: DesktopBootstrap | null
+}
+
+function DesktopSetup({ bootstrap }: { bootstrap: DesktopBootstrap }) {
+  return (
+    <section className='desktop-setup'>
+      <span aria-hidden='true' className='brand-mark large'>π</span>
+      <h1>Pi setup required</h1>
+      <p>{bootstrap.pi.message ?? 'Pi could not be validated.'}</p>
+      <p>Set the absolute Pi executable path in Settings, then restart Pi Livecraft.</p>
+    </section>
+  )
+}
+
 /** Orchestrates workspace state, Pi events, and UI panels. */
 function App() {
   // Workspace and sessions
@@ -1483,4 +1499,10 @@ function messageOf(cause: unknown): string {
   return cause instanceof Error ? cause.message : String(cause)
 }
 
-export default App
+function RootApp({ desktopBootstrap = null }: AppProps) {
+  if (desktopBootstrap && !desktopBootstrap.pi.ready)
+    return <DesktopSetup bootstrap={desktopBootstrap} />
+  return <App />
+}
+
+export default RootApp

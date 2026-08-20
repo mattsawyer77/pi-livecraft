@@ -17,3 +17,19 @@
 @import "./features/notifications/notifications.css";
 @import "./features/manager/manager.css";
 @import "./styles/responsive.css";
+
+.desktop-setup {
+  align-items: center;
+  display: grid;
+  gap: 0.75rem;
+  justify-items: center;
+  margin: 10vh auto;
+  max-width: 34rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.desktop-setup p {
+  color: var(--text-muted);
+  margin: 0;
+}
