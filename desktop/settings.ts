@@ -1,0 +1,91 @@
+import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
+import type { DesktopPreferences, DesktopTabState, DesktopWindowState } from './shared.ts'
+
+const SETTINGS_FILE = 'settings.json'
+
+export interface DesktopSettingsStore {
+  load(): Promise<DesktopPreferences>
+  save(preferences: DesktopPreferences): Promise<void>
+}
+
+const defaultPreferences = (): DesktopPreferences => ({ tabs: [], version: 1 })
+
+/** Stores the desktop-only durable settings in Electron's platform user-data directory. */
+export function createDesktopSettingsStore(userDataPath: string): DesktopSettingsStore {
+  const settingsPath = join(userDataPath, SETTINGS_FILE)
+
+  return {
+    async load(): Promise<DesktopPreferences> {
+      try {
+        return parsePreferences(JSON.parse(await readFile(settingsPath, 'utf8')))
+      } catch {
+        return defaultPreferences()
+      }
+    },
+
+    async save(preferences: DesktopPreferences): Promise<void> {
+      const serialized = serializePreferences(preferences)
+      const temporaryPath = `${settingsPath}.${process.pid}.tmp`
+      await mkdir(userDataPath, { mode: 0o700, recursive: true })
+      await writeFile(temporaryPath, `${JSON.stringify(serialized, null, 2)}\n`, { mode: 0o600 })
+      await rename(temporaryPath, settingsPath)
+    },
+  }
+}
+
+/** Imports only the documented selected-session browser fallback into absent disk preferences. */
+export function migrateBrowserPreferences(
+  stored: Record<string, string | null>,
+  preferences: DesktopPreferences,
+): DesktopPreferences {
+  const selectedSessionId = stored['pi-livecraft.selected-session']
+  if (preferences.selectedSessionId || !selectedSessionId?.trim()) return preferences
+  return { ...preferences, selectedSessionId }
+}
+
+function parsePreferences(value: unknown): DesktopPreferences {
+  if (!isRecord(value) || value.version !== 1 || !isTabs(value.tabs)) return defaultPreferences()
+  if (value.piPath !== undefined && typeof value.piPath !== 'string') return defaultPreferences()
+  if (value.selectedSessionId !== undefined && typeof value.selectedSessionId !== 'string')
+    return defaultPreferences()
+  if (value.window !== undefined && !isWindowState(value.window)) return defaultPreferences()
+
+  return {
+    ...(typeof value.piPath === 'string' ? { piPath: value.piPath } : {}),
+    ...(typeof value.selectedSessionId === 'string'
+      ? { selectedSessionId: value.selectedSessionId }
+      : {}),
+    tabs: value.tabs,
+    version: 1,
+    ...(isWindowState(value.window) ? { window: value.window } : {}),
+  }
+}
+
+function serializePreferences(preferences: DesktopPreferences): DesktopPreferences {
+  return {
+    ...(typeof preferences.piPath === 'string' ? { piPath: preferences.piPath } : {}),
+    ...(typeof preferences.selectedSessionId === 'string'
+      ? { selectedSessionId: preferences.selectedSessionId }
+      : {}),
+    tabs: preferences.tabs.map(({ sessionId }) => ({ sessionId })),
+    version: 1,
+    ...(isWindowState(preferences.window) ? { window: preferences.window } : {}),
+  }
+}
+
+function isTabs(value: unknown): value is DesktopTabState[] {
+  return Array.isArray(value)
+    && value.every((tab) => isRecord(tab) && typeof tab.sessionId === 'string')
+}
+
+function isWindowState(value: unknown): value is DesktopWindowState {
+  if (!isRecord(value) || !Number.isFinite(value.height) || !Number.isFinite(value.width))
+    return false
+  return (value.x === undefined || Number.isFinite(value.x))
+    && (value.y === undefined || Number.isFinite(value.y))
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+}
