@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import type { DesktopBootstrap, DesktopPreferences } from '../desktop/shared.ts'
 import './App.css'
-import { applyDesktopPreference } from './desktop.ts'
+import { applyDesktopPreference, desktopSelectionMatches } from './desktop.ts'
 import { SessionTabs } from './features/workspace/SessionTabs.tsx'
 import { reconcileSessionTabs, selectAfterTabClose } from './features/workspace/session-tabs.ts'
 import {
@@ -418,7 +418,7 @@ function App({ desktopBootstrap = null }: AppProps) {
   useEffect(() => {
     if (!desktopPreferences) return
     if (
-      desktopPreferences.selectedSessionId === selectedId
+      desktopSelectionMatches(desktopPreferences.selectedSessionId, selectedId)
       && desktopPreferences.uiPreferences?.workspacePath === workspacePath
       && JSON.stringify(desktopPreferences.uiPreferences?.recentWorkspacePaths)
         === JSON.stringify(recentWorkspacePaths)
@@ -452,7 +452,7 @@ function App({ desktopBootstrap = null }: AppProps) {
     const tabs = sessionTabs.map((tab) => ({ sessionId: tab.id }))
     if (
       JSON.stringify(tabs) !== JSON.stringify(desktopPreferences.tabs)
-      || desktopPreferences.selectedSessionId !== selectedId
+      || !desktopSelectionMatches(desktopPreferences.selectedSessionId, selectedId)
     )
       updateDesktopPreferences({ selectedSessionId: selectedId || undefined, tabs })
   }, [desktopPreferences, selectedId, sessionTabs, updateDesktopPreferences])

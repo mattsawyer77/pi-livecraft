@@ -28,6 +28,11 @@ type DesktopPreferenceUpdate = Partial<
   >
 >
 
+/** Compares persisted and runtime selections while treating an absent id as an empty selection. */
+export function desktopSelectionMatches(persisted: string | undefined, selected: string): boolean {
+  return (persisted ?? '') === selected
+}
+
 /** Updates only the serializable desktop settings owned by the preload bridge. */
 export function applyDesktopPreference(
   preferences: DesktopPreferences,

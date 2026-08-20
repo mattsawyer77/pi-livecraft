@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { applyDesktopPreference } from '../src/desktop.ts'
+import { applyDesktopPreference, desktopSelectionMatches } from '../src/desktop.ts'
 
 test('updates only declared desktop preference keys', () => {
   assert.deepEqual(
@@ -34,6 +34,12 @@ test('merges a desktop UI preference update with existing values', () => {
       version: 1,
     },
   )
+})
+
+test('treats an absent selected session as an empty UI selection', () => {
+  assert.equal(desktopSelectionMatches(undefined, ''), true)
+  assert.equal(desktopSelectionMatches('session-1', 'session-1'), true)
+  assert.equal(desktopSelectionMatches('session-1', ''), false)
 })
 
 test('rejects a secret-shaped preference update', () => {
