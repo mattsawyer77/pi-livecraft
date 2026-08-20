@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- Ship an unsigned macOS arm64 `.app`; signing, notarization, update delivery, universal binaries, cross-compilation, and multi-window support are out of scope.
+- Ship an unsigned macOS arm64 `.app` ZIP artifact; DMG generation is deferred until host image tooling is reproducibly available within the Nix sandbox. Signing, notarization, update delivery, universal binaries, cross-compilation, and multi-window support are out of scope.
 - Nix is the authoritative desktop artifact entry point: `nix develop` provides the supported development shell and `nix build .#desktop` produces the unsigned macOS artifacts. The npm scripts remain internal build steps and usable for browser development.
 - Build desktop artifacts natively on macOS arm64 only. The flake may provide a development shell on other Nix systems, but it must fail clearly rather than pretend to produce a macOS package there.
 - The flake must pin Nixpkgs in `flake.lock`, use Nixpkgs' Node 24 and Electron, and set `ELECTRON_SKIP_BINARY_DOWNLOAD=1` so a sandboxed build never fetches Electron from the network. `electron-builder` receives the Nix Electron application directory via its `electronDist` configuration.
@@ -238,9 +238,6 @@ files:
   - "!node_modules/**/{test,tests,*.map}"
 mac:
   target:
-    - target: dmg
-      arch:
-        - arm64
     - target: zip
       arch:
         - arm64
@@ -319,7 +316,7 @@ nix develop --command npm test -- test/desktop-services.test.ts test/nix-flake.t
 nix build .#desktop
 ```
 
-Expected: TypeScript completes successfully, both contract tests pass, and on macOS arm64 `result/` contains unsigned `.dmg` and `.zip` artifacts. On another host, `nix build .#desktop` must fail with the explicit native-macOS message rather than creating an invalid artifact.
+Expected: TypeScript completes successfully, both contract tests pass, and on macOS arm64 `result/` contains an unsigned `.zip` artifact. On another host, `nix build .#desktop` must fail with the explicit native-macOS message rather than creating an invalid artifact.
 
 - [ ] **Step 5: Commit the independently buildable package skeleton**
 
@@ -1046,7 +1043,7 @@ nix develop --command npm run desktop:package
 nix build .#desktop
 ```
 
-Expected: all checks exit 0 and `result/` contains unsigned arm64 `.dmg` and `.zip` artifacts produced by the Nix derivation. On a macOS host, manually perform the seven acceptance checks from the design spec: Gatekeeper launch, discovery, concurrent sessions, tab switching, non-destructive close, persisted settings without secret, and clean quit.
+Expected: all checks exit 0 and `result/` contains an unsigned arm64 `.zip` artifact produced by the Nix derivation. On a macOS host, manually perform the seven acceptance checks from the design spec: Gatekeeper launch, discovery, concurrent sessions, tab switching, non-destructive close, persisted settings without secret, and clean quit.
 
 - [ ] **Step 5: Commit packaging and documentation**
 

@@ -128,7 +128,7 @@ Production Electron packaging uses the Vite build output and starts production b
 
 Use a Nix flake as the authoritative development and macOS release entry point. The flake pins Nixpkgs, provides a Node 24 development shell through `nix develop`, and exposes `nix build .#desktop` for a native macOS arm64 build. The desktop derivation uses Nixpkgs' Electron distribution and `electron-builder` with Electron downloading disabled; it must not consume a developer's `node_modules`, Electron cache, Pi executable, or user configuration. Its output contains the unsigned `.app` archive artifacts only.
 
-Keep Electron and `electron-builder` scripts in `package.json` as lower-level build steps for browser and Electron development, but document the flake as the supported release path. Produce architecture-specific unsigned macOS arm64 `.app` ZIP and DMG artifacts first; universal binaries and cross-platform/cross-architecture cross-compilation can be evaluated only after native runtime packaging is proven.
+Keep Electron and `electron-builder` scripts in `package.json` as lower-level build steps for browser and Electron development, but document the flake as the supported release path. Produce an architecture-specific unsigned macOS arm64 `.app` ZIP artifact first. DMG generation depends on host macOS image tooling and is deferred until it is reproducibly available inside the Nix sandbox; universal binaries and cross-platform/cross-architecture cross-compilation can be evaluated only after native runtime packaging is proven.
 
 The release documentation must explain:
 
