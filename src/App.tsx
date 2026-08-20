@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties }
 import type { DesktopBootstrap, DesktopPreferences } from '../desktop/shared.ts'
 import './App.css'
 import { applyDesktopPreference } from './desktop.ts'
+import { SessionTabs } from './features/workspace/SessionTabs.tsx'
+import { reconcileSessionTabs, selectAfterTabClose } from './features/workspace/session-tabs.ts'
 import {
   commitChanges,
   createSession,
@@ -385,6 +387,25 @@ function App({ desktopBootstrap = null }: AppProps) {
     onWorkspaceSelected: handleWorkspaceSelected,
   })
   selectedIdRef.current = selectedId
+  const sessionTabs = reconcileSessionTabs(desktopPreferences?.tabs ?? [], sessions, selectedId)
+
+  const closeDesktopTab = useCallback((sessionId: string) => {
+    const nextId = selectAfterTabClose(sessionId, sessionTabs, selectedId)
+    updateDesktopPreferences({
+      tabs: sessionTabs.filter((tab) => tab.id !== sessionId).map((tab) => ({ sessionId: tab.id })),
+    })
+    if (sessionId === selectedId) setSelectedId(nextId)
+  }, [selectedId, sessionTabs, setSelectedId, updateDesktopPreferences])
+
+  useEffect(() => {
+    if (!desktopPreferences) return
+    const tabs = sessionTabs.map((tab) => ({ sessionId: tab.id }))
+    if (
+      JSON.stringify(tabs) !== JSON.stringify(desktopPreferences.tabs)
+      || desktopPreferences.selectedSessionId !== selectedId
+    )
+      updateDesktopPreferences({ selectedSessionId: selectedId || undefined, tabs })
+  }, [desktopPreferences, selectedId, sessionTabs, updateDesktopPreferences])
 
   useEffect(() => {
     const session = sessions.find((candidate) => candidate.id === selectedId)
@@ -1180,6 +1201,14 @@ function App({ desktopBootstrap = null }: AppProps) {
       />
 
       <main className='workspace'>
+        {desktopPreferences && (
+          <SessionTabs
+            selectedId={selectedId}
+            tabs={sessionTabs}
+            onClose={closeDesktopTab}
+            onSelect={setSelectedId}
+          />
+        )}
         <ManagerRuntimeNotice
           activeSession={sessions.some(({ status }) =>
             status === 'running' || status === 'starting'
