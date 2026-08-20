@@ -126,16 +126,19 @@ Production Electron packaging uses the Vite build output and starts production b
 
 ## Build and release
 
-Add Electron and `electron-builder` build scripts and configuration capable of producing an unsigned macOS `.app`, with a ZIP or DMG artifact. Start with architecture-specific artifacts; universal binaries can be evaluated after the runtime packaging is proven.
+Use a Nix flake as the authoritative development and macOS release entry point. The flake pins Nixpkgs, provides a Node 24 development shell through `nix develop`, and exposes `nix build .#desktop` for a native macOS arm64 build. The desktop derivation uses Nixpkgs' Electron distribution and `electron-builder` with Electron downloading disabled; it must not consume a developer's `node_modules`, Electron cache, Pi executable, or user configuration. Its output contains the unsigned `.app` archive artifacts only.
+
+Keep Electron and `electron-builder` scripts in `package.json` as lower-level build steps for browser and Electron development, but document the flake as the supported release path. Produce architecture-specific unsigned macOS arm64 `.app` ZIP and DMG artifacts first; universal binaries and cross-platform/cross-architecture cross-compilation can be evaluated only after native runtime packaging is proven.
 
 The release documentation must explain:
 
 - Pi is a prerequisite and stays user-managed.
 - How the app finds Pi and how to configure an absolute path.
 - Gatekeeper's first-launch override for an unsigned app.
-- The supported macOS and Node/Pi compatibility expectations.
+- The supported macOS arm64, Nix, Node, and Pi compatibility expectations.
+- `nix develop` for the reproducible toolchain and `nix build .#desktop` for release artifacts linked at `result/`.
 
-Signing, notarization, automatic updates, and distribution hosting are explicitly deferred.
+Signing, notarization, automatic updates, distribution hosting, universal binaries, and cross-compilation are explicitly deferred.
 
 ## Error handling
 
@@ -171,6 +174,6 @@ Manual macOS acceptance checks should prove:
 1. Establish Electron packaging, disk-backed desktop preferences, and secure local service orchestration while preserving current browser development behavior.
 2. Add Pi discovery, persisted executable-path preference, validation, and setup/error UI.
 3. Add one-window session tabs backed by the current multi-session manager state and persist tab/window restoration state.
-4. Produce and manually validate an unsigned macOS artifact, then write end-user installation documentation.
+4. Produce a native macOS arm64 artifact through `nix build .#desktop`, manually validate it, then write end-user installation documentation.
 
 Each phase should keep the browser application usable and validate its closest owning boundary before broad packaging checks.
