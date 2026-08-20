@@ -75,9 +75,10 @@ export class PiProcess extends EventEmitter {
         ...(sessionPath ? ['--session', sessionPath] : ['--session-id', sessionId]),
       ]
 
-    const env = options.isolated
-      ? { ...process.env, PI_CODING_AGENT_DIR: ISOLATED_AGENT_DIR }
-      : process.env
+    const env = {
+      ...process.env,
+      ...(options.isolated ? { PI_CODING_AGENT_DIR: ISOLATED_AGENT_DIR } : {}),
+    }
     this.child = spawn(launcher.command, [...launcher.argsPrefix, ...args], {
       cwd,
       env,

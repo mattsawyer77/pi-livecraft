@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
-import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdtemp, mkdir, readFile, realpath, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import test from 'node:test'
@@ -27,7 +27,14 @@ test('resolves the package CLI behind pi.cmd without executing it', async (t) =>
   await writeFile(cli, '')
   const invocation = resolvePiLauncher('win32', { PaTh: bin }, ';')
   assert.equal(invocation.command, process.execPath)
-  assert.equal(invocation.argsPrefix[0], cli)
+  assert.equal(invocation.argsPrefix[0], await realpath(cli))
+})
+
+test('uses a configured absolute Pi executable outside Windows', () => {
+  assert.deepEqual(
+    resolvePiLauncher('darwin', { PI_LIVECRAFT_PI_PATH: '/opt/homebrew/bin/pi' }),
+    { command: '/opt/homebrew/bin/pi', argsPrefix: [] },
+  )
 })
 
 test('passes hostile RPC values to the resolved CLI exactly as argument-array data', async (t) => {
