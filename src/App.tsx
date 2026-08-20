@@ -165,6 +165,8 @@ function App({ desktopBootstrap = null }: AppProps) {
     canRestart: false,
   })
   const [conversationView, setConversationView] = useState<ConversationView>(() => {
+    const desktopView = desktopBootstrap?.preferences.uiPreferences?.conversationView
+    if (desktopView) return desktopView
     const stored = window.localStorage.getItem('pi-livecraft.conversation-view')
     if (stored === 'detailed' || stored === 'simple-expanded') return 'detailed'
     if (stored === 'semi-detailed') return 'semi-detailed'
@@ -188,24 +190,30 @@ function App({ desktopBootstrap = null }: AppProps) {
 
   // Workspace tools and sidebars
   const [workspaceSidebarWidth, setWorkspaceSidebarWidth] = useState(() =>
-    readWorkspaceSidebarWidth(window.localStorage.getItem('pi-livecraft.workspace-sidebar-width'))
+    desktopBootstrap?.preferences.uiPreferences?.workspaceSidebarWidth
+      ?? readWorkspaceSidebarWidth(
+        window.localStorage.getItem('pi-livecraft.workspace-sidebar-width'),
+      )
   )
   const [workspaceSidebarCollapsed, setWorkspaceSidebarCollapsed] = useState(() =>
-    readWorkspaceSidebarCollapsed(
-      window.localStorage.getItem('pi-livecraft.workspace-sidebar-collapsed'),
-    )
+    desktopBootstrap?.preferences.uiPreferences?.workspaceSidebarCollapsed
+      ?? readWorkspaceSidebarCollapsed(
+        window.localStorage.getItem('pi-livecraft.workspace-sidebar-collapsed'),
+      )
   )
   const [gitSnapshot, setGitSnapshot] = useState<GitSnapshot | null>(null)
   const [quotas, setQuotas] = useState<QuotaSnapshot | null>(null)
   const [activeRightWidget, setActiveRightWidget] = useState<RightWidget | null>(
-    readActiveRightWidget,
+    () =>
+      desktopBootstrap?.preferences.uiPreferences?.selectedRightWidget ?? readActiveRightWidget(),
   )
   const [rightSidebarWidth, setRightSidebarWidth] = useState(() =>
-    readRightSidebarWidth(
-      window.localStorage.getItem('pi-livecraft.right-sidebar-width') ?? window
-        .localStorage
-        .getItem('pi-livecraft.git-sidebar-width'),
-    )
+    desktopBootstrap?.preferences.uiPreferences?.rightSidebarWidth
+      ?? readRightSidebarWidth(
+        window.localStorage.getItem('pi-livecraft.right-sidebar-width') ?? window
+          .localStorage
+          .getItem('pi-livecraft.git-sidebar-width'),
+      )
   )
 
   // Preferences and commands
@@ -232,8 +240,12 @@ function App({ desktopBootstrap = null }: AppProps) {
   const [conversationNavigation, setConversationNavigation] = useState<
     { id: number; target: SessionAnalysisTarget }
   >()
-  const [shortcuts, setShortcuts] = useState(() => readShortcuts())
-  const [terminalCommand, setTerminalCommand] = useState(() => readTerminalCommand())
+  const [shortcuts, setShortcuts] = useState(() =>
+    desktopBootstrap?.preferences.uiPreferences?.shortcuts ?? readShortcuts()
+  )
+  const [terminalCommand, setTerminalCommand] = useState(() =>
+    desktopBootstrap?.preferences.uiPreferences?.terminalCommand ?? readTerminalCommand()
+  )
 
   // Workspace and session synchronization
   const selectedIdRef = useRef(window.localStorage.getItem('pi-livecraft.selected-session') ?? '')
@@ -388,10 +400,44 @@ function App({ desktopBootstrap = null }: AppProps) {
     onError: handleWorkspaceError,
     onInitialMessageSent: handleInitialMessageSent,
     onSessionsRefreshed: handleSessionsRefreshed,
+    initialRecentWorkspacePaths: desktopBootstrap?.preferences.uiPreferences?.recentWorkspacePaths,
+    initialSelectedId: desktopBootstrap?.preferences.selectedSessionId,
+    initialWorkspacePath: desktopBootstrap?.preferences.uiPreferences?.workspacePath,
     onWorkspaceSelected: handleWorkspaceSelected,
   })
   selectedIdRef.current = selectedId
   const sessionTabs = reconcileSessionTabs(desktopPreferences?.tabs ?? [], sessions, selectedId)
+
+  const persistConversationView = useCallback((view: ConversationView) => {
+    window.localStorage.setItem('pi-livecraft.conversation-view', view)
+    updateDesktopPreferences({
+      uiPreferences: { ...desktopPreferences?.uiPreferences, conversationView: view },
+    })
+  }, [desktopPreferences, updateDesktopPreferences])
+
+  useEffect(() => {
+    if (!desktopPreferences) return
+    if (
+      desktopPreferences.selectedSessionId === selectedId
+      && desktopPreferences.uiPreferences?.workspacePath === workspacePath
+      && JSON.stringify(desktopPreferences.uiPreferences?.recentWorkspacePaths)
+        === JSON.stringify(recentWorkspacePaths)
+    ) return
+    updateDesktopPreferences({
+      selectedSessionId: selectedId || undefined,
+      uiPreferences: {
+        ...desktopPreferences.uiPreferences,
+        recentWorkspacePaths,
+        workspacePath,
+      },
+    })
+  }, [
+    desktopPreferences,
+    recentWorkspacePaths,
+    selectedId,
+    updateDesktopPreferences,
+    workspacePath,
+  ])
 
   const closeDesktopTab = useCallback((sessionId: string) => {
     const nextId = selectAfterTabClose(sessionId, sessionTabs, selectedId)
@@ -473,8 +519,11 @@ function App({ desktopBootstrap = null }: AppProps) {
   const updateWorkspaceSidebarWidth = useCallback((width: number) => {
     const nextWidth = clampWorkspaceSidebarWidth(width)
     window.localStorage.setItem('pi-livecraft.workspace-sidebar-width', String(nextWidth))
+    updateDesktopPreferences({
+      uiPreferences: { ...desktopPreferences?.uiPreferences, workspaceSidebarWidth: nextWidth },
+    })
     setWorkspaceSidebarWidth(nextWidth)
-  }, [])
+  }, [desktopPreferences, updateDesktopPreferences])
 
   const toggleWorkspaceSidebar = useCallback(() => {
     const nextCollapsed = !workspaceSidebarCollapsed
@@ -482,19 +531,31 @@ function App({ desktopBootstrap = null }: AppProps) {
       'pi-livecraft.workspace-sidebar-collapsed',
       String(nextCollapsed),
     )
+    updateDesktopPreferences({
+      uiPreferences: {
+        ...desktopPreferences?.uiPreferences,
+        workspaceSidebarCollapsed: nextCollapsed,
+      },
+    })
     setWorkspaceSidebarCollapsed(nextCollapsed)
-  }, [workspaceSidebarCollapsed])
+  }, [desktopPreferences, updateDesktopPreferences, workspaceSidebarCollapsed])
 
   const updateRightSidebarWidth = useCallback((width: number) => {
     const nextWidth = clampRightSidebarWidth(width)
     window.localStorage.setItem('pi-livecraft.right-sidebar-width', String(nextWidth))
+    updateDesktopPreferences({
+      uiPreferences: { ...desktopPreferences?.uiPreferences, rightSidebarWidth: nextWidth },
+    })
     setRightSidebarWidth(nextWidth)
-  }, [])
+  }, [desktopPreferences, updateDesktopPreferences])
 
   const openRightWidget = useCallback((widget: RightWidget) => {
     window.localStorage.setItem('pi-livecraft.right-sidebar-widget', widget)
+    updateDesktopPreferences({
+      uiPreferences: { ...desktopPreferences?.uiPreferences, selectedRightWidget: widget },
+    })
     setActiveRightWidget(widget)
-  }, [])
+  }, [desktopPreferences, updateDesktopPreferences])
 
   // Theme preferences
   const selectTheme = useCallback((id: string) => {
@@ -1016,7 +1077,7 @@ function App({ desktopBootstrap = null }: AppProps) {
     if (id === 'toggle-conversation-view') {
       setConversationView((current) => {
         const next = nextConversationView(current)
-        window.localStorage.setItem('pi-livecraft.conversation-view', next)
+        persistConversationView(next)
         return next
       })
       return
@@ -1039,6 +1100,7 @@ function App({ desktopBootstrap = null }: AppProps) {
     showToast,
     snapshot.messages,
     startAndSelectSession,
+    persistConversationView,
     terminalCommand,
     workspacePath,
   ])
@@ -1117,10 +1179,10 @@ function App({ desktopBootstrap = null }: AppProps) {
   const navigateToAnalysisTarget = useCallback((target: SessionAnalysisTarget): void => {
     if (target.kind === 'tool' || target.kind === 'turn') {
       setConversationView('detailed')
-      window.localStorage.setItem('pi-livecraft.conversation-view', 'detailed')
+      persistConversationView('detailed')
     }
     setConversationNavigation((current) => ({ id: (current?.id ?? 0) + 1, target }))
-  }, [])
+  }, [persistConversationView])
 
   // Right sidebar composition
   /** Actions pinned to the right rail without an associated panel. */
@@ -1253,7 +1315,7 @@ function App({ desktopBootstrap = null }: AppProps) {
                       onClick={() =>
                         setConversationView((current) => {
                           const next = nextConversationView(current)
-                          window.localStorage.setItem('pi-livecraft.conversation-view', next)
+                          persistConversationView(next)
                           return next
                         })}
                       type='button'
@@ -1280,7 +1342,7 @@ function App({ desktopBootstrap = null }: AppProps) {
                             key={view}
                             onClick={() => {
                               setConversationView(view)
-                              window.localStorage.setItem('pi-livecraft.conversation-view', view)
+                              persistConversationView(view)
                             }}
                             type='button'
                           >
@@ -1441,6 +1503,12 @@ function App({ desktopBootstrap = null }: AppProps) {
           setActiveRightWidget((current) => {
             const next = current === widget ? null : widget
             window.localStorage.setItem('pi-livecraft.right-sidebar-widget', next ?? 'none')
+            updateDesktopPreferences({
+              uiPreferences: {
+                ...desktopPreferences?.uiPreferences,
+                selectedRightWidget: next ?? undefined,
+              },
+            })
             return next
           })}
       />
@@ -1493,10 +1561,16 @@ function App({ desktopBootstrap = null }: AppProps) {
             const next = { ...shortcuts, [id]: shortcut }
             setShortcuts(next)
             window.localStorage.setItem('pi-livecraft.shortcuts', JSON.stringify(next))
+            updateDesktopPreferences({
+              uiPreferences: { ...desktopPreferences?.uiPreferences, shortcuts: next },
+            })
           }}
           onTerminalCommandChange={(value) => {
             setTerminalCommand(value)
             window.localStorage.setItem('pi-livecraft.terminal-command', value)
+            updateDesktopPreferences({
+              uiPreferences: { ...desktopPreferences?.uiPreferences, terminalCommand: value },
+            })
           }}
           onSelectTheme={selectTheme}
           onDuplicateTheme={duplicateActiveTheme}
@@ -1507,6 +1581,9 @@ function App({ desktopBootstrap = null }: AppProps) {
           onReset={() => {
             setShortcuts(defaultShortcuts)
             window.localStorage.setItem('pi-livecraft.shortcuts', JSON.stringify(defaultShortcuts))
+            updateDesktopPreferences({
+              uiPreferences: { ...desktopPreferences?.uiPreferences, shortcuts: defaultShortcuts },
+            })
           }}
           onClose={() => setSettingsOpen(false)}
           piPath={desktopPreferences?.piPath ?? desktopBootstrap?.pi.path}

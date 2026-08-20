@@ -22,7 +22,10 @@ export function mergeDesktopPreferences(
 }
 
 type DesktopPreferenceUpdate = Partial<
-  Pick<DesktopPreferences, 'piPath' | 'selectedSessionId' | 'tabs' | 'themePreferences' | 'window'>
+  Pick<
+    DesktopPreferences,
+    'piPath' | 'selectedSessionId' | 'tabs' | 'themePreferences' | 'uiPreferences' | 'window'
+  >
 >
 
 /** Updates only the serializable desktop settings owned by the preload bridge. */
@@ -31,8 +34,18 @@ export function applyDesktopPreference(
   update: DesktopPreferenceUpdate,
 ): DesktopPreferences {
   for (const key of Object.keys(update)) {
-    if (!['piPath', 'selectedSessionId', 'tabs', 'themePreferences', 'window'].includes(key))
+    if (
+      !['piPath', 'selectedSessionId', 'tabs', 'themePreferences', 'uiPreferences', 'window']
+        .includes(key)
+    )
       throw new Error('Unknown desktop preference')
   }
-  return { ...preferences, ...update, version: 1 }
+  return {
+    ...preferences,
+    ...update,
+    ...(update.uiPreferences
+      ? { uiPreferences: { ...preferences.uiPreferences, ...update.uiPreferences } }
+      : {}),
+    version: 1,
+  }
 }

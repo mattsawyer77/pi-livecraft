@@ -1,7 +1,12 @@
 import { randomUUID } from 'node:crypto'
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import type { DesktopPreferences, DesktopTabState, DesktopWindowState } from './shared.ts'
+import type {
+  DesktopPreferences,
+  DesktopTabState,
+  DesktopUiPreferences,
+  DesktopWindowState,
+} from './shared.ts'
 
 const SETTINGS_FILE = 'settings.json'
 
@@ -52,6 +57,8 @@ function parsePreferences(value: unknown): DesktopPreferences {
     return defaultPreferences()
   if (value.themePreferences !== undefined && !isThemePreferences(value.themePreferences))
     return defaultPreferences()
+  if (value.uiPreferences !== undefined && !isUiPreferences(value.uiPreferences))
+    return defaultPreferences()
   if (value.window !== undefined && !isWindowState(value.window)) return defaultPreferences()
 
   return {
@@ -62,6 +69,7 @@ function parsePreferences(value: unknown): DesktopPreferences {
     ...(isThemePreferences(value.themePreferences)
       ? { themePreferences: value.themePreferences }
       : {}),
+    ...(isUiPreferences(value.uiPreferences) ? { uiPreferences: value.uiPreferences } : {}),
     tabs: value.tabs,
     version: 1,
     ...(isWindowState(value.window) ? { window: value.window } : {}),
@@ -77,10 +85,30 @@ function serializePreferences(preferences: DesktopPreferences): DesktopPreferenc
     ...(isThemePreferences(preferences.themePreferences)
       ? { themePreferences: preferences.themePreferences }
       : {}),
+    ...(isUiPreferences(preferences.uiPreferences)
+      ? { uiPreferences: preferences.uiPreferences }
+      : {}),
     tabs: preferences.tabs.map(({ sessionId }) => ({ sessionId })),
     version: 1,
     ...(isWindowState(preferences.window) ? { window: preferences.window } : {}),
   }
+}
+
+function isUiPreferences(value: unknown): value is DesktopUiPreferences {
+  if (!isRecord(value)) return false
+  const string = (field: string) => value[field] === undefined || typeof value[field] === 'string'
+  const number = (field: string) => value[field] === undefined || Number.isFinite(value[field])
+  const strings = (field: string) =>
+    value[field] === undefined
+    || (Array.isArray(value[field]) && value[field].every((item) => typeof item === 'string'))
+  const shortcuts = value.shortcuts === undefined || (isRecord(value.shortcuts)
+    && Object.values(value.shortcuts).every((shortcut) => typeof shortcut === 'string'))
+  return string('conversationView') && strings('recentWorkspacePaths')
+    && number('rightSidebarWidth')
+    && string('selectedRightWidget') && shortcuts && string('terminalCommand')
+    && string('workspacePath') && (value.workspaceSidebarCollapsed === undefined
+      || typeof value.workspaceSidebarCollapsed === 'boolean')
+    && number('workspaceSidebarWidth')
 }
 
 function isThemePreferences(

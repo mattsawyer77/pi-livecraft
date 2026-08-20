@@ -25,6 +25,25 @@ test('writes versioned desktop preferences without launch secrets', async (t) =>
   assert.equal(stored.includes('apiSecret'), false)
 })
 
+test('persists validated desktop UI preferences', async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), 'pi-livecraft-settings-'))
+  t.after(() => rm(directory, { force: true, recursive: true }))
+  const store = createDesktopSettingsStore(directory)
+  const uiPreferences = {
+    conversationView: 'semi-detailed',
+    recentWorkspacePaths: ['/workspace'],
+    rightSidebarWidth: 420,
+    selectedRightWidget: 'todo',
+    shortcuts: { send: 'Meta+Enter' },
+    terminalCommand: 'open -a Terminal {cwd}',
+    workspacePath: '/workspace',
+    workspaceSidebarCollapsed: true,
+    workspaceSidebarWidth: 280,
+  } as const
+  await store.save({ tabs: [], uiPreferences, version: 1 })
+  assert.deepEqual(await store.load(), { tabs: [], uiPreferences, version: 1 })
+})
+
 test('persists desktop-owned theme preferences', async (t) => {
   const directory = await mkdtemp(join(tmpdir(), 'pi-livecraft-settings-'))
   t.after(() => rm(directory, { force: true, recursive: true }))

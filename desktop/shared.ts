@@ -9,10 +9,23 @@ export interface DesktopWindowState {
   y?: number
 }
 
+export interface DesktopUiPreferences {
+  conversationView?: 'simple' | 'semi-detailed' | 'detailed'
+  recentWorkspacePaths?: readonly string[]
+  rightSidebarWidth?: number
+  selectedRightWidget?: 'analysis' | 'git' | 'quotas' | 'todo'
+  shortcuts?: Record<string, string>
+  terminalCommand?: string
+  workspacePath?: string
+  workspaceSidebarCollapsed?: boolean
+  workspaceSidebarWidth?: number
+}
+
 export interface DesktopPreferences {
   piPath?: string
   selectedSessionId?: string
   themePreferences?: { active: string; themes: unknown[]; builtInOverrides?: unknown }
+  uiPreferences?: DesktopUiPreferences
   tabs: DesktopTabState[]
   version: 1
   window?: DesktopWindowState
