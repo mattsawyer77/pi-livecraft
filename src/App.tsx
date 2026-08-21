@@ -3,7 +3,11 @@ import type { DesktopBootstrap, DesktopPreferences } from '../desktop/shared.ts'
 import './App.css'
 import { applyDesktopPreference, desktopSelectionMatches } from './desktop.ts'
 import { SessionTabs } from './features/workspace/SessionTabs.tsx'
-import { reconcileSessionTabs, selectAfterTabClose } from './features/workspace/session-tabs.ts'
+import {
+  reconcileSessionTabs,
+  selectAfterTabClose,
+  workspaceForSessionTab,
+} from './features/workspace/session-tabs.ts'
 import {
   commitChanges,
   createSession,
@@ -438,6 +442,13 @@ function App({ desktopBootstrap = null }: AppProps) {
     updateDesktopPreferences,
     workspacePath,
   ])
+
+  const selectDesktopTab = useCallback((sessionId: string) => {
+    const targetWorkspace = workspaceForSessionTab(sessionId, sessions)
+    if (targetWorkspace && targetWorkspace !== workspacePath)
+      selectWorkspace(targetWorkspace, sessionId)
+    else setSelectedId(sessionId)
+  }, [selectWorkspace, sessions, setSelectedId, workspacePath])
 
   const closeDesktopTab = useCallback((sessionId: string) => {
     const nextId = selectAfterTabClose(sessionId, sessionTabs, selectedId)
@@ -1275,7 +1286,7 @@ function App({ desktopBootstrap = null }: AppProps) {
             selectedId={selectedId}
             tabs={sessionTabs}
             onClose={closeDesktopTab}
-            onSelect={setSelectedId}
+            onSelect={selectDesktopTab}
           />
         )}
         <ManagerRuntimeNotice

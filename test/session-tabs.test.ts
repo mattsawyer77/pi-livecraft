@@ -3,6 +3,7 @@ import test from 'node:test'
 import {
   reconcileSessionTabs,
   selectAfterTabClose,
+  workspaceForSessionTab,
 } from '../src/features/workspace/session-tabs.ts'
 
 const sessions = [
@@ -29,6 +30,11 @@ test('restores live persisted tabs and includes the selected live session', () =
     { id: 'b', running: false, title: 'Review code' },
     { id: 'a', running: true, title: 'Build app' },
   ])
+})
+
+test('resolves the selected tab workspace from its live session', () => {
+  assert.equal(workspaceForSessionTab('b', sessions), '/b')
+  assert.equal(workspaceForSessionTab('missing', sessions), undefined)
 })
 
 test('selects the adjacent visible tab after closing the selected tab', () => {

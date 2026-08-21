@@ -30,6 +30,14 @@ export function reconcileSessionTabs(
   })
 }
 
+/** Returns the workspace that owns a visible tab, so cross-workspace selection uses the session controller. */
+export function workspaceForSessionTab(
+  sessionId: string,
+  sessions: readonly SessionSummary[],
+): string | undefined {
+  return sessions.find((session) => session.id === sessionId)?.cwd
+}
+
 export function selectAfterTabClose(
   closedId: string,
   tabs: readonly SessionTab[],
