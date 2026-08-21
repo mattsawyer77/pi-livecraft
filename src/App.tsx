@@ -1269,7 +1269,7 @@ function App({ desktopBootstrap = null }: AppProps) {
         onToggleCollapsed={toggleWorkspaceSidebar}
       />
 
-      <main className='workspace'>
+      <main className={`workspace${desktopPreferences ? ' has-session-tabs' : ''}`}>
         {desktopPreferences && (
           <SessionTabs
             selectedId={selectedId}

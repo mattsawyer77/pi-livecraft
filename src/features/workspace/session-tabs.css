@@ -1,5 +1,8 @@
 .session-tabs {
+  position: relative;
+  z-index: 4;
   display: flex;
+  min-height: 48px;
   gap: 4px;
   overflow-x: auto;
   padding: 8px 12px;
