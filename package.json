@@ -46,8 +46,10 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@mermaid-js/layout-elk": "^0.2.3",
     "@radix-ui/react-select": "^2.3.3",
     "diff": "^8.0.4",
+    "mermaid": "^11.17.2",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-markdown": "^10.1.0",

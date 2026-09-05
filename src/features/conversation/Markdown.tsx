@@ -2,6 +2,8 @@ import { lazy, memo, Suspense, useEffect, useRef, useState, type ReactNode } fro
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { CopyablePre } from './CodeBlock.tsx'
+import { MermaidDiagram } from './MermaidDiagram.tsx'
+import { isMermaidCode } from './mermaid.ts'
 import { parseMarkdownFrontmatter } from './markdown-frontmatter.ts'
 
 const LazyCodeHighlighter = lazy(() => import('./CodeHighlighter'))
@@ -120,9 +122,12 @@ export const Markdown = memo(function Markdown(
       )}
       <ReactMarkdown
         components={{
-          code: ({ children: code, className }) => (
-            <MarkdownCode className={className}>{code}</MarkdownCode>
-          ),
+          code: ({ children: code, className }) => {
+            const source = String(code ?? '')
+            return isMermaidCode(className)
+              ? <MermaidDiagram copyablePre={copyablePre} onError={onError} source={source} />
+              : <MarkdownCode className={className}>{code}</MarkdownCode>
+          },
           pre: ({ children: code }) =>
             copyablePre
               ? <CopyablePre onError={onError}>{code}</CopyablePre>
