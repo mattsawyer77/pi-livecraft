@@ -1,4 +1,13 @@
-import { lazy, memo, Suspense, useEffect, useRef, useState, type ReactNode } from 'react'
+import {
+  isValidElement,
+  lazy,
+  memo,
+  Suspense,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { CopyablePre } from './CodeBlock.tsx'
@@ -128,10 +137,12 @@ export const Markdown = memo(function Markdown(
               ? <MermaidDiagram copyablePre={copyablePre} onError={onError} source={source} />
               : <MarkdownCode className={className}>{code}</MarkdownCode>
           },
-          pre: ({ children: code }) =>
-            copyablePre
+          pre: ({ children: code }) => {
+            if (isValidElement(code) && code.type === MermaidDiagram) return code
+            return copyablePre
               ? <CopyablePre onError={onError}>{code}</CopyablePre>
-              : <pre>{code}</pre>,
+              : <pre>{code}</pre>
+          },
         }}
         remarkPlugins={[remarkGfm]}
       >
