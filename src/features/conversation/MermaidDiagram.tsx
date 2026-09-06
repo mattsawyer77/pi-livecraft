@@ -76,7 +76,6 @@ export function MermaidDiagram({ onError, copyablePre = false, source }: Mermaid
       .catch((cause: unknown) => {
         if (cancelled) return
         setError(cause)
-        onError?.(cause)
       })
 
     return () => {
