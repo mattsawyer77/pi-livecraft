@@ -5,6 +5,7 @@ import {
   isMermaidCode,
   mermaidDiagramWidth,
   mermaidFailureMessage,
+  mermaidRenderTargetStyle,
   mermaidRenderConfig,
 } from '../src/features/conversation/mermaid.ts'
 
@@ -21,6 +22,10 @@ test('detects explicit ELK layout requests', () => {
   assert.equal(hasElkLayout('flowchart-elk TD\nA --> B'), true)
   assert.equal(hasElkLayout('flowchart TD\nA --> B'), false)
   assert.equal(hasElkLayout('flowchart TD\nA --> elk'), false)
+})
+
+test('keeps the flowchart measurement target geometrically rendered', () => {
+  assert.deepEqual(mermaidRenderTargetStyle, { opacity: 0, visibility: 'visible' })
 })
 
 test('preserves readable intrinsic width for rendered diagrams', () => {

@@ -1,4 +1,5 @@
 export const mermaidFailureMessage = 'Mermaid could not be rendered.'
+export const mermaidRenderTargetStyle = { opacity: 0, visibility: 'visible' as const }
 
 export function mermaidDiagramWidth(svg: string): number {
   const viewBoxWidth = /\bviewBox=["']\s*[-\d.]+\s+[-\d.]+\s+([-\d.]+)/.exec(svg)?.[1]

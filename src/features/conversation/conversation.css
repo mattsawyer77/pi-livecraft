@@ -20,8 +20,9 @@
   left: -100000px;
   width: 1000px;
   min-height: 1px;
-  visibility: hidden;
+  visibility: visible;
   pointer-events: none;
+  opacity: 0;
 }
 .mermaid-fallback > small {
   display: block;

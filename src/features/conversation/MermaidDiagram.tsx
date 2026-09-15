@@ -4,6 +4,7 @@ import {
   hasElkLayout,
   mermaidDiagramWidth,
   mermaidFailureMessage,
+  mermaidRenderTargetStyle,
   mermaidRenderConfig,
 } from './mermaid.ts'
 
@@ -95,7 +96,11 @@ export function MermaidDiagram({ onError, copyablePre = false, source }: Mermaid
       : <pre>{sourceCode}</pre>
     return (
       <div className='mermaid-fallback'>
-        <div className='mermaid-render-target' ref={renderTargetRef} />
+        <div
+          className='mermaid-render-target'
+          ref={renderTargetRef}
+          style={mermaidRenderTargetStyle}
+        />
         {fallback}
         {Boolean(error) && <small role='status'>{mermaidFailureMessage}</small>}
       </div>
@@ -104,7 +109,11 @@ export function MermaidDiagram({ onError, copyablePre = false, source }: Mermaid
 
   return (
     <>
-      <div className='mermaid-render-target' ref={renderTargetRef} />
+      <div
+        className='mermaid-render-target'
+        ref={renderTargetRef}
+        style={mermaidRenderTargetStyle}
+      />
       <div
         className='mermaid-diagram'
         style={{ '--mermaid-diagram-width': `${mermaidDiagramWidth(svg)}px` } as CSSProperties}
