@@ -5,6 +5,7 @@ import {
   mermaidDiagramWidth,
   mermaidFailureMessage,
   mermaidRenderConfig,
+  mermaidRenderState,
 } from './mermaid.ts'
 
 type MermaidModule = typeof import('mermaid')
@@ -91,14 +92,18 @@ export function MermaidDiagram({ onError, copyablePre = false, source }: Mermaid
   }, [id, onError, source, theme])
 
   const sourceCode = <code className='language-mermaid'>{source}</code>
-  const rendered = Boolean(svg && !error)
-  if (!rendered) {
+  const renderState = mermaidRenderState(svg, error)
+  if (renderState !== 'rendered') {
     const fallback = copyablePre
       ? <CopyablePre onError={onError}>{sourceCode}</CopyablePre>
       : <pre>{sourceCode}</pre>
     return (
       <div className='mermaid-fallback'>
-        <div className='mermaid-diagram' ref={renderTargetRef} />
+        <div
+          className='mermaid-diagram'
+          ref={renderTargetRef}
+          style={{ '--mermaid-diagram-width': '100%' } as CSSProperties}
+        />
         {fallback}
         {Boolean(error) && <small role='status'>{mermaidFailureMessage}</small>}
       </div>

@@ -7,6 +7,7 @@ import {
   mermaidFailureMessage,
   mermaidRenderConfig,
   mermaidRenderFallbackVisible,
+  mermaidRenderState,
 } from '../src/features/conversation/mermaid.ts'
 
 test('recognizes only an explicit mermaid language class', () => {
@@ -28,6 +29,12 @@ test('keeps the source fallback visible until direct rendering succeeds', () => 
   assert.equal(mermaidRenderFallbackVisible('loading'), true)
   assert.equal(mermaidRenderFallbackVisible('error'), true)
   assert.equal(mermaidRenderFallbackVisible('rendered'), false)
+})
+
+test('keeps a successful render state separate from the fallback state', () => {
+  assert.equal(mermaidRenderState(undefined, undefined), 'loading')
+  assert.equal(mermaidRenderState(undefined, new Error('invalid')), 'error')
+  assert.equal(mermaidRenderState('<svg></svg>', undefined), 'rendered')
 })
 
 test('preserves readable intrinsic width for rendered diagrams', () => {

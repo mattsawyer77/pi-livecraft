@@ -3,6 +3,14 @@ export function mermaidRenderFallbackVisible(state: 'loading' | 'error' | 'rende
   return state !== 'rendered'
 }
 
+export function mermaidRenderState(
+  svg: string | undefined,
+  error: unknown,
+): 'loading' | 'error' | 'rendered' {
+  if (error) return 'error'
+  return svg ? 'rendered' : 'loading'
+}
+
 export function mermaidDiagramWidth(svg: string): number {
   const viewBoxWidth = /\bviewBox=["']\s*[-\d.]+\s+[-\d.]+\s+([-\d.]+)/.exec(svg)?.[1]
   const intrinsicWidth = viewBoxWidth ? Number(viewBoxWidth) : 0
