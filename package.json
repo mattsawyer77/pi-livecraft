@@ -23,6 +23,7 @@
     "node": ">=24"
   },
   "type": "module",
+  "main": "dist-desktop/main.js",
   "scripts": {
     "dev": "concurrently --kill-others --kill-timeout 3000 --names manager,backend,frontend npm:dev:manager npm:dev:backend npm:dev:frontend",
     "start": "npm run build && concurrently --kill-others --kill-timeout 3000 --names manager,backend npm:start:manager npm:start:backend",
@@ -32,6 +33,9 @@
     "start:backend": "node server/backend.ts",
     "start:manager": "node server/manager-supervisor.ts",
     "build": "npm run typecheck && vite build",
+    "desktop:typecheck": "tsc --project desktop/tsconfig.json",
+    "desktop:build": "npm run build && npm run desktop:typecheck && node desktop/build-runtime.mjs",
+    "desktop:package": "npm run desktop:build && electron-builder --config desktop/electron-builder.yml",
     "typecheck": "tsc -b",
     "format": "dprint fmt",
     "format:check": "dprint check",
@@ -42,8 +46,10 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@mermaid-js/layout-elk": "^0.2.3",
     "@radix-ui/react-select": "^2.3.3",
     "diff": "^8.0.4",
+    "mermaid": "^11.17.2",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-markdown": "^10.1.0",
@@ -61,6 +67,9 @@
     "@vitejs/plugin-react": "^6.0.3",
     "concurrently": "^10.0.3",
     "dprint": "^0.55.2",
+    "electron": "^41.10.3",
+    "electron-builder": "^26.15.3",
+    "esbuild": "^0.28.2",
     "husky": "^9.1.7",
     "lint-staged": "^17.2.0",
     "oxlint": "^1.71.0",

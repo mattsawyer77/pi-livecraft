@@ -1,5 +1,10 @@
 node_modules/
 dist/
+dist-desktop/
+dist-runtime/
+release/
+result
+result-*
 *.log
 *.local
 .env

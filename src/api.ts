@@ -16,6 +16,18 @@ import type {
   WorkspaceFile,
 } from '../shared/types.ts'
 import { isObject } from '../shared/is-object.ts'
+import type { DesktopBootstrap } from '../desktop/shared.ts'
+
+let backendUrl: string | undefined
+let apiSecret: string | undefined
+
+/** Configures the authenticated loopback endpoint supplied by the Electron bootstrap. */
+export function configureApi(
+  bootstrap: Pick<DesktopBootstrap, 'backendUrl' | 'apiSecret'>,
+): void {
+  backendUrl = bootstrap.backendUrl
+  apiSecret = bootstrap.apiSecret
+}
 
 const managerEventNames: readonly ManagerEvent['event'][] = [
   'session_created',
@@ -51,7 +63,9 @@ export function subscribeManagerEvents(
   onEvent: (event: ManagerEvent) => void,
   onError: () => void,
 ): () => void {
-  const source = new EventSource('/api/events')
+  const url = new URL('/api/events', apiOrigin())
+  if (apiSecret) url.searchParams.set('token', apiSecret)
+  const source = new EventSource(url)
   source.onmessage = ({ data }) => {
     const event = parseManagerEvent(data)
     if (event) onEvent(event)
@@ -282,13 +296,17 @@ export async function sendPiCommand(sessionId: string, command: JsonObject): Pro
   })
 }
 
+function apiOrigin(): string {
+  return backendUrl ?? (globalThis as { location?: { origin: string } }).location?.origin
+    ?? 'http://127.0.0.1'
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(path, {
-    ...init,
-    headers: typeof init?.body === 'string'
-      ? { 'Content-Type': 'application/json', ...init.headers }
-      : init?.headers,
-  })
+  const url = new URL(path, apiOrigin())
+  const headers = new Headers(init?.headers)
+  if (typeof init?.body === 'string') headers.set('Content-Type', 'application/json')
+  if (apiSecret) headers.set('Authorization', `Bearer ${apiSecret}`)
+  const response = await fetch(url, { ...init, headers })
   const value: unknown = await response.json()
   if (!response.ok) {
     const message = isObject(value) && typeof value.error === 'string'

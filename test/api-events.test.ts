@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { parseManagerEvent } from '../src/api.ts'
+import { configureApi, listDirectories, parseManagerEvent } from '../src/api.ts'
 
 test('parses a valid manager event', () => {
   const event = parseManagerEvent(JSON.stringify({
@@ -32,6 +32,20 @@ test('parses a valid manager event', () => {
       data: { newSessionId: 'session-2' },
     },
   )
+})
+
+test('sends the desktop launch secret with directory requests', async (t) => {
+  const originalFetch = globalThis.fetch
+  t.after(() => {
+    globalThis.fetch = originalFetch
+  })
+  configureApi({ apiSecret: 'launch-secret', backendUrl: 'http://127.0.0.1:43121' })
+  globalThis.fetch = async (input, init) => {
+    assert.equal(String(input), 'http://127.0.0.1:43121/api/directories?path=%2Fworkspace')
+    assert.equal(new Headers(init?.headers).get('authorization'), 'Bearer launch-secret')
+    return new Response(JSON.stringify({ directories: [], parentPath: null, path: '/workspace' }))
+  }
+  await listDirectories('/workspace')
 })
 
 test('rejects malformed or unknown manager events', () => {

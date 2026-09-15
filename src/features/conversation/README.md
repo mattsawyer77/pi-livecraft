@@ -20,7 +20,8 @@ Presentation follows the same ownership boundaries:
 - `Markdown.tsx` owns Markdown and front matter rendering;
 - `ToolCallCard.tsx` owns tool state, actions, and expansion;
 - `ToolCallOutput.tsx` renders file previews and expanded output;
-- `ToolCallEditDiff.tsx` renders edit diffs.
+- `ToolCallEditDiff.tsx` renders edit diffs;
+- `MermaidDiagram.tsx` renders explicit Mermaid fences as static SVG.
 
 Styles are split by the same surfaces: `conversation.css` for the viewport and empty/loading states, `messages.css`, `tool-call.css`, `conversation-actions.css`, `activity.css`, and `conversation-motion.css`. Composer slash-command styles remain in `composer.css`.
 
@@ -30,7 +31,7 @@ Conversation views are simplified (messages only), semi-detailed (tool headers o
 
 Tool calls are composed by `ToolCallCard` in `src/features/conversation/ToolCallCard.tsx`; previews and expanded results live in `ToolCallOutput.tsx`. The presentation is selected by `toolCallPresentation()` in `src/features/conversation/tool-presentation.ts`.
 
-By default, the tool header exposes its full title on hover. Once the call is resolved, its status displays the character counts of its serialized JSON arguments (`↘`) and raw text output (`↗`); these values remain available to hover and screen readers. Code and text files show a four-line preview; CSV files show a bounded table preview; a click expands the full output. HTML, SVG, Markdown, and CSV files are rendered directly in the card (HTML in a sandboxed iframe, SVG as an image, Markdown via React-Markdown, CSV as a bounded table); a "View source" label toggles to syntax-highlighted code with line numbers. Markdown previews and source views are capped at 380px with vertical scroll; CSV table previews are capped at 380px and CSV source views at 540px; HTML and SVG previews and their source views are capped at 540px.
+By default, the tool header exposes its full title on hover. Once the call is resolved, its status displays the character counts of its serialized JSON arguments (`↘`) and raw text output (`↗`); these values remain available to hover and screen readers. Code and text files show a four-line preview; CSV files show a bounded table preview; a click expands the full output. HTML, SVG, Markdown, and CSV files are rendered directly in the card (HTML in a sandboxed iframe, SVG as an image, Markdown via React-Markdown, CSV as a bounded table); Markdown Mermaid fences render as static SVG, with a source fallback when Mermaid rejects the diagram. A "View source" label toggles to syntax-highlighted code with line numbers. Markdown previews and source views are capped at 380px with vertical scroll; CSV table previews are capped at 380px and CSV source views at 540px; HTML and SVG previews and their source views are capped at 540px.
 
 Follow the [step-by-step guide](/docs/HOW-TO-TOOL-PRESENTATION.md) before adding a presentation. Add one only when a tool genuinely provides information that is easier to understand in another form.
 

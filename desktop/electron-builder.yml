@@ -1,0 +1,23 @@
+appId: dev.pi.livecraft
+productName: Pi Livecraft
+directories:
+  output: release
+  buildResources: build
+files:
+  - dist/**
+  - dist-desktop/**
+  - dist-runtime/**
+  - pi-extensions/**
+  - package.json
+  - node_modules/**
+  - "!node_modules/.cache/**"
+  - "!node_modules/**/{test,tests,*.map}"
+asarUnpack:
+  - dist-runtime/**
+  - pi-extensions/**
+mac:
+  target:
+    - target: zip
+      arch:
+        - arm64
+  identity: null

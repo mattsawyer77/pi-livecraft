@@ -1,3 +1,26 @@
+.mermaid-diagram {
+  width: max(100%, var(--mermaid-diagram-width, 640px));
+  max-width: 100%;
+  margin: 12px 0;
+  overflow-x: auto;
+}
+.mermaid-fallback > [hidden] {
+  display: none;
+}
+.mermaid-diagram svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.mermaid-fallback {
+  position: relative;
+}
+.mermaid-fallback > small {
+  display: block;
+  margin-top: 5px;
+  color: var(--danger);
+  font-size: 11px;
+}
 .conversation {
   position: relative;
   min-width: 0;

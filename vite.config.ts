@@ -5,6 +5,7 @@ const backendPort = process.env.PI_LIVECRAFT_BACKEND_PORT ?? '43121'
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: './',
   plugins: [react()],
   server: {
     proxy: {

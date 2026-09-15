@@ -148,6 +148,9 @@ button:disabled, select:disabled {
   min-height: 0;
   background: var(--surface);
 }
+.workspace.has-session-tabs {
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
 
 /* ── Dark mode overrides (colour values derived from palette variables) ── */
 

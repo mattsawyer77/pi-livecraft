@@ -23,6 +23,9 @@ export function resolvePiLauncher(
   env: NodeJS.ProcessEnv = process.env,
   pathDelimiter = delimiter,
 ): PiLauncherInvocation {
+  const explicitPath = env.PI_LIVECRAFT_PI_PATH
+  if (platform !== 'win32' && explicitPath && isAbsolute(explicitPath))
+    return { command: explicitPath, argsPrefix: [] }
   if (platform !== 'win32') return { command: 'pi', argsPrefix: [] }
 
   const path = Object.entries(env).find(([key]) => key.toLowerCase() === 'path')?.[1]

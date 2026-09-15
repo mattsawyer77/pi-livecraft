@@ -1,0 +1,35 @@
+import { mkdir, writeFile } from 'node:fs/promises'
+import { build } from 'esbuild'
+
+const bundles = [
+  ['desktop/main.ts', 'dist-desktop/main.js'],
+  ['desktop/preload.ts', 'dist-desktop/preload.js'],
+  ['server/backend.ts', 'dist-runtime/backend.js'],
+  ['server/manager-supervisor.ts', 'dist-runtime/manager-supervisor.js'],
+  ['server/manager.ts', 'dist-runtime/manager.js'],
+  ['pi-extensions/ask-user-question.ts', 'dist-runtime/extensions/ask-user-question.js'],
+  ['pi-extensions/quotas.ts', 'dist-runtime/extensions/quotas.js'],
+]
+
+await Promise.all(
+  bundles.map(([entryPoint, outfile]) =>
+    build({
+      bundle: true,
+      entryPoints: [entryPoint],
+      external: entryPoint.startsWith('desktop/') ? ['electron'] : [],
+      format: entryPoint.endsWith('preload.ts') ? 'cjs' : 'esm',
+      outfile,
+      packages: entryPoint.startsWith('server/') || entryPoint.startsWith('pi-extensions/')
+        ? 'external'
+        : 'bundle',
+      platform: 'node',
+      sourcemap: false,
+    })
+  ),
+)
+
+await mkdir('dist-runtime', { recursive: true })
+await writeFile(
+  'dist-runtime/manager-runtime-files.json',
+  `${JSON.stringify({ version: 1, files: ['dist-runtime/manager.js'] }, null, 2)}\n`,
+)

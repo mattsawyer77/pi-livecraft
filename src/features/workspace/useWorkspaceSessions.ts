@@ -18,6 +18,9 @@ import {
 } from './sidebar-sessions.ts'
 
 interface WorkspaceSessionsOptions {
+  initialSelectedId?: string
+  initialWorkspacePath?: string
+  initialRecentWorkspacePaths?: readonly string[]
   onDraftMessage: (sessionId: string, message: string) => void
   onError: (cause: unknown) => void
   onInitialMessageSent: () => void
@@ -35,8 +38,16 @@ const MAX_COMPLETED_SESSIONS = 30
 
 /** Owns workspace selection, session lists, persistence, and session creation. */
 export function useWorkspaceSessions(
-  { onDraftMessage, onError, onInitialMessageSent, onSessionsRefreshed, onWorkspaceSelected }:
-    WorkspaceSessionsOptions,
+  {
+    initialRecentWorkspacePaths,
+    initialSelectedId,
+    initialWorkspacePath,
+    onDraftMessage,
+    onError,
+    onInitialMessageSent,
+    onSessionsRefreshed,
+    onWorkspaceSelected,
+  }: WorkspaceSessionsOptions,
 ) {
   const [sessions, setSessions] = useState<SessionSummary[]>([])
   const [recentSessions, setRecentSessions] = useState<RecentSession[]>([])
@@ -46,16 +57,16 @@ export function useWorkspaceSessions(
   )
   const [isRefreshingSessions, setIsRefreshingSessions] = useState(true)
   const [workspacePath, setWorkspacePath] = useState(() =>
-    window.localStorage.getItem('pi-livecraft.workspace-path') ?? '.'
+    initialWorkspacePath ?? window.localStorage.getItem('pi-livecraft.workspace-path') ?? '.'
   )
-  const [recentWorkspacePaths, setRecentWorkspacePaths] = useState(() =>
-    recentWorkspaces(
-      window.localStorage.getItem('pi-livecraft.workspace-path') ?? '.',
+  const [recentWorkspacePaths, setRecentWorkspacePaths] = useState<string[]>(() =>
+    initialRecentWorkspacePaths ? [...initialRecentWorkspacePaths] : recentWorkspaces(
+      initialWorkspacePath ?? window.localStorage.getItem('pi-livecraft.workspace-path') ?? '.',
       readRecentWorkspaces(),
     )
   )
   const [directoryPickerOpen, setDirectoryPickerOpen] = useState(false)
-  const [selectedId, setSelectedId] = useState('')
+  const [selectedId, setSelectedId] = useState(initialSelectedId ?? '')
   const [creatingSession, setCreatingSession] = useState(false)
   const sessionsRef = useRef(sessions)
   const recentSessionsRef = useRef(recentSessions)
@@ -64,7 +75,7 @@ export function useWorkspaceSessions(
   const selectedIdRef = useRef(selectedId)
   const creatingSessionRef = useRef(false)
   const refreshVersionRef = useRef(0)
-  const autoSelectOnRefreshRef = useRef(true)
+  const autoSelectOnRefreshRef = useRef(!initialSelectedId)
   sessionsRef.current = sessions
   recentSessionsRef.current = recentSessions
   sentSessionsRef.current = sentSessions
@@ -72,7 +83,8 @@ export function useWorkspaceSessions(
   selectedIdRef.current = selectedId
 
   useEffect(() => {
-    if (window.localStorage.getItem('pi-livecraft.workspace-path') !== null) return
+    if (initialWorkspacePath || window.localStorage.getItem('pi-livecraft.workspace-path') !== null)
+      return
     let active = true
     void listDirectories('.')
       .then(({ path }) => {
@@ -84,7 +96,7 @@ export function useWorkspaceSessions(
     return () => {
       active = false
     }
-  }, [])
+  }, [initialWorkspacePath])
 
   useEffect(() => {
     if (selectedId) window.localStorage.setItem('pi-livecraft.selected-session', selectedId)
