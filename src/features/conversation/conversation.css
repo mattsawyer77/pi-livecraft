@@ -14,6 +14,15 @@
 .mermaid-fallback {
   position: relative;
 }
+.mermaid-render-target {
+  position: absolute;
+  top: 0;
+  left: -100000px;
+  width: 1000px;
+  min-height: 1px;
+  visibility: hidden;
+  pointer-events: none;
+}
 .mermaid-fallback > small {
   display: block;
   margin-top: 5px;

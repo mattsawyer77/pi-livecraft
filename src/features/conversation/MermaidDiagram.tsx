@@ -1,4 +1,4 @@
-import { useEffect, useId, useState, type CSSProperties } from 'react'
+import { useEffect, useId, useRef, useState, type CSSProperties } from 'react'
 import { CopyablePre } from './CodeBlock.tsx'
 import {
   hasElkLayout,
@@ -53,6 +53,7 @@ function currentTheme(): 'dark' | 'default' {
 
 export function MermaidDiagram({ onError, copyablePre = false, source }: MermaidDiagramProps) {
   const id = useId()
+  const renderTargetRef = useRef<HTMLDivElement>(null)
   const [theme, setTheme] = useState<'dark' | 'default'>(currentTheme)
   const [svg, setSvg] = useState<string>()
   const [error, setError] = useState<unknown>()
@@ -69,8 +70,11 @@ export function MermaidDiagram({ onError, copyablePre = false, source }: Mermaid
     setSvg(undefined)
     setError(undefined)
 
+    const renderTarget = renderTargetRef.current
+    if (!renderTarget) return
+
     void loadMermaidWithLayout(source, theme)
-      .then((mermaid) => mermaid.render(renderId(id), source))
+      .then((mermaid) => mermaid.render(renderId(id), source, renderTarget))
       .then(({ svg: renderedSvg }) => {
         if (!cancelled) setSvg(renderedSvg)
       })
@@ -91,6 +95,7 @@ export function MermaidDiagram({ onError, copyablePre = false, source }: Mermaid
       : <pre>{sourceCode}</pre>
     return (
       <div className='mermaid-fallback'>
+        <div className='mermaid-render-target' ref={renderTargetRef} />
         {fallback}
         {Boolean(error) && <small role='status'>{mermaidFailureMessage}</small>}
       </div>
@@ -98,11 +103,14 @@ export function MermaidDiagram({ onError, copyablePre = false, source }: Mermaid
   }
 
   return (
-    <div
-      className='mermaid-diagram'
-      style={{ '--mermaid-diagram-width': `${mermaidDiagramWidth(svg)}px` } as CSSProperties}
-    >
-      <div dangerouslySetInnerHTML={{ __html: svg }} />
-    </div>
+    <>
+      <div className='mermaid-render-target' ref={renderTargetRef} />
+      <div
+        className='mermaid-diagram'
+        style={{ '--mermaid-diagram-width': `${mermaidDiagramWidth(svg)}px` } as CSSProperties}
+      >
+        <div dangerouslySetInnerHTML={{ __html: svg }} />
+      </div>
+    </>
   )
 }
