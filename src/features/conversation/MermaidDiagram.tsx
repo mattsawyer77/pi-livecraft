@@ -1,11 +1,10 @@
-import { useEffect, useId, useRef, useState, type CSSProperties } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { CopyablePre } from './CodeBlock.tsx'
 import {
   hasElkLayout,
   mermaidDiagramWidth,
   mermaidFailureMessage,
   mermaidRenderConfig,
-  mermaidRenderState,
 } from './mermaid.ts'
 
 type MermaidModule = typeof import('mermaid')
@@ -55,8 +54,8 @@ function currentTheme(): 'dark' | 'default' {
 export function MermaidDiagram({ onError, copyablePre = false, source }: MermaidDiagramProps) {
   const id = useId()
   const renderTargetRef = useRef<HTMLDivElement>(null)
+  const fallbackRef = useRef<HTMLDivElement>(null)
   const [theme, setTheme] = useState<'dark' | 'default'>(currentTheme)
-  const [svg, setSvg] = useState<string>()
   const [error, setError] = useState<unknown>()
 
   useEffect(() => {
@@ -68,8 +67,8 @@ export function MermaidDiagram({ onError, copyablePre = false, source }: Mermaid
 
   useEffect(() => {
     let cancelled = false
-    setSvg(undefined)
     setError(undefined)
+    if (fallbackRef.current) fallbackRef.current.hidden = false
 
     const renderTarget = renderTargetRef.current
     renderTarget?.replaceChildren()
@@ -78,7 +77,9 @@ export function MermaidDiagram({ onError, copyablePre = false, source }: Mermaid
     void loadMermaidWithLayout(source, theme)
       .then((mermaid) => mermaid.render(renderId(id), source, renderTarget))
       .then(({ svg: renderedSvg }) => {
-        if (!cancelled) setSvg(renderedSvg)
+        if (cancelled) return
+        renderTarget.style.setProperty('--mermaid-diagram-width', `${mermaidDiagramWidth(renderedSvg)}px`)
+        if (fallbackRef.current) fallbackRef.current.hidden = true
       })
       .catch((cause: unknown) => {
         if (cancelled) return
@@ -92,29 +93,16 @@ export function MermaidDiagram({ onError, copyablePre = false, source }: Mermaid
   }, [id, onError, source, theme])
 
   const sourceCode = <code className='language-mermaid'>{source}</code>
-  const renderState = mermaidRenderState(svg, error)
-  if (renderState !== 'rendered') {
-    const fallback = copyablePre
-      ? <CopyablePre onError={onError}>{sourceCode}</CopyablePre>
-      : <pre>{sourceCode}</pre>
-    return (
-      <div className='mermaid-fallback'>
-        <div
-          className='mermaid-diagram'
-          ref={renderTargetRef}
-          style={{ '--mermaid-diagram-width': '100%' } as CSSProperties}
-        />
+  const fallback = copyablePre
+    ? <CopyablePre onError={onError}>{sourceCode}</CopyablePre>
+    : <pre>{sourceCode}</pre>
+  return (
+    <div className='mermaid-fallback'>
+      <div className='mermaid-diagram' ref={renderTargetRef} />
+      <div ref={fallbackRef}>
         {fallback}
         {Boolean(error) && <small role='status'>{mermaidFailureMessage}</small>}
       </div>
-    )
-  }
-
-  return (
-    <div
-      className='mermaid-diagram'
-      ref={renderTargetRef}
-      style={{ '--mermaid-diagram-width': `${mermaidDiagramWidth(svg ?? '')}px` } as CSSProperties}
-    />
+    </div>
   )
 }

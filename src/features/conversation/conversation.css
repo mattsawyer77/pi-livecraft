@@ -6,6 +6,9 @@
 .mermaid-diagram {
   width: max(100%, var(--mermaid-diagram-width, 640px));
 }
+.mermaid-fallback > [hidden] {
+  display: none;
+}
 .mermaid-diagram svg {
   display: block;
   width: 100%;
