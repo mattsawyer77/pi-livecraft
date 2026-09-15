@@ -5,8 +5,8 @@ import {
   isMermaidCode,
   mermaidDiagramWidth,
   mermaidFailureMessage,
-  mermaidRenderTargetStyle,
   mermaidRenderConfig,
+  mermaidRenderFallbackVisible,
 } from '../src/features/conversation/mermaid.ts'
 
 test('recognizes only an explicit mermaid language class', () => {
@@ -24,8 +24,10 @@ test('detects explicit ELK layout requests', () => {
   assert.equal(hasElkLayout('flowchart TD\nA --> elk'), false)
 })
 
-test('keeps the flowchart measurement target geometrically rendered', () => {
-  assert.deepEqual(mermaidRenderTargetStyle, { opacity: 0, visibility: 'visible' })
+test('keeps the source fallback visible until direct rendering succeeds', () => {
+  assert.equal(mermaidRenderFallbackVisible('loading'), true)
+  assert.equal(mermaidRenderFallbackVisible('error'), true)
+  assert.equal(mermaidRenderFallbackVisible('rendered'), false)
 })
 
 test('preserves readable intrinsic width for rendered diagrams', () => {

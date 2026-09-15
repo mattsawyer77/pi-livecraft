@@ -4,7 +4,6 @@ import {
   hasElkLayout,
   mermaidDiagramWidth,
   mermaidFailureMessage,
-  mermaidRenderTargetStyle,
   mermaidRenderConfig,
 } from './mermaid.ts'
 
@@ -72,6 +71,7 @@ export function MermaidDiagram({ onError, copyablePre = false, source }: Mermaid
     setError(undefined)
 
     const renderTarget = renderTargetRef.current
+    renderTarget?.replaceChildren()
     if (!renderTarget) return
 
     void loadMermaidWithLayout(source, theme)
@@ -81,6 +81,7 @@ export function MermaidDiagram({ onError, copyablePre = false, source }: Mermaid
       })
       .catch((cause: unknown) => {
         if (cancelled) return
+        renderTarget.replaceChildren()
         setError(cause)
       })
 
@@ -90,17 +91,14 @@ export function MermaidDiagram({ onError, copyablePre = false, source }: Mermaid
   }, [id, onError, source, theme])
 
   const sourceCode = <code className='language-mermaid'>{source}</code>
-  if (!svg || error) {
+  const rendered = Boolean(svg && !error)
+  if (!rendered) {
     const fallback = copyablePre
       ? <CopyablePre onError={onError}>{sourceCode}</CopyablePre>
       : <pre>{sourceCode}</pre>
     return (
       <div className='mermaid-fallback'>
-        <div
-          className='mermaid-render-target'
-          ref={renderTargetRef}
-          style={mermaidRenderTargetStyle}
-        />
+        <div className='mermaid-diagram' ref={renderTargetRef} />
         {fallback}
         {Boolean(error) && <small role='status'>{mermaidFailureMessage}</small>}
       </div>
@@ -108,18 +106,10 @@ export function MermaidDiagram({ onError, copyablePre = false, source }: Mermaid
   }
 
   return (
-    <>
-      <div
-        className='mermaid-render-target'
-        ref={renderTargetRef}
-        style={mermaidRenderTargetStyle}
-      />
-      <div
-        className='mermaid-diagram'
-        style={{ '--mermaid-diagram-width': `${mermaidDiagramWidth(svg)}px` } as CSSProperties}
-      >
-        <div dangerouslySetInnerHTML={{ __html: svg }} />
-      </div>
-    </>
+    <div
+      className='mermaid-diagram'
+      ref={renderTargetRef}
+      style={{ '--mermaid-diagram-width': `${mermaidDiagramWidth(svg ?? '')}px` } as CSSProperties}
+    />
   )
 }

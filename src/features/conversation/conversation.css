@@ -3,7 +3,7 @@
   margin: 12px 0;
   overflow-x: auto;
 }
-.mermaid-diagram > div {
+.mermaid-diagram {
   width: max(100%, var(--mermaid-diagram-width, 640px));
 }
 .mermaid-diagram svg {
@@ -13,16 +13,6 @@
 }
 .mermaid-fallback {
   position: relative;
-}
-.mermaid-render-target {
-  position: absolute;
-  top: 0;
-  left: -100000px;
-  width: 1000px;
-  min-height: 1px;
-  visibility: visible;
-  pointer-events: none;
-  opacity: 0;
 }
 .mermaid-fallback > small {
   display: block;
