@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import test from 'node:test'
@@ -115,6 +115,22 @@ test('serializes concurrent preference writes without losing the settings file',
     store.save({ piPath: '/two/pi', tabs: [], version: 1 }),
   ])
   assert.match((await store.load()).piPath ?? '', /^\/(one|two)\/pi$/)
+})
+
+test('cleans up a temporary file when replacing settings fails', async (t) => {
+  const directory = await mkdtemp(join(tmpdir(), 'pi-livecraft-settings-'))
+  t.after(() => rm(directory, { force: true, recursive: true }))
+  await mkdir(join(directory, 'settings.json'))
+  const store = createDesktopSettingsStore(directory)
+
+  await assert.rejects(
+    store.save({ tabs: [], version: 1 }),
+  )
+
+  assert.deepEqual(
+    (await readdir(directory)).filter((name) => name.endsWith('.tmp')),
+    [],
+  )
 })
 
 test('migrates browser values only into missing desktop fields', () => {

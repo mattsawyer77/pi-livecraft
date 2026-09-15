@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import type {
   DesktopPreferences,
@@ -30,9 +30,13 @@ export function createDesktopSettingsStore(userDataPath: string): DesktopSetting
       const current = await readExistingPreferences(settingsPath)
       const serialized = serializePreferences(updater(current))
       const temporaryPath = `${settingsPath}.${process.pid}.${randomUUID()}.tmp`
-      await mkdir(userDataPath, { mode: 0o700, recursive: true })
-      await writeFile(temporaryPath, `${JSON.stringify(serialized, null, 2)}\n`, { mode: 0o600 })
-      await rename(temporaryPath, settingsPath)
+      try {
+        await mkdir(userDataPath, { mode: 0o700, recursive: true })
+        await writeFile(temporaryPath, `${JSON.stringify(serialized, null, 2)}\n`, { mode: 0o600 })
+        await rename(temporaryPath, settingsPath)
+      } finally {
+        await unlink(temporaryPath).catch(() => undefined)
+      }
     }
     const pending = saveQueue.then(write, write)
     saveQueue = pending.catch(() => undefined)
