@@ -11,11 +11,13 @@ export function hasElkLayout(source: string): boolean {
 export function mermaidRenderConfig(theme: 'dark' | 'default'): {
   securityLevel: 'strict'
   startOnLoad: false
+  suppressErrorRendering: true
   theme: 'dark' | 'default'
 } {
   return {
     securityLevel: 'strict',
     startOnLoad: false,
+    suppressErrorRendering: true,
     theme,
   }
 }

@@ -29,6 +29,7 @@ test('uses restrictive Mermaid rendering settings', () => {
   assert.deepEqual(mermaidRenderConfig('dark'), {
     securityLevel: 'strict',
     startOnLoad: false,
+    suppressErrorRendering: true,
     theme: 'dark',
   })
 })
