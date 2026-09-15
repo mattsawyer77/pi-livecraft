@@ -3,10 +3,12 @@
   margin: 12px 0;
   overflow-x: auto;
 }
+.mermaid-diagram > div {
+  width: max(100%, var(--mermaid-diagram-width, 640px));
+}
 .mermaid-diagram svg {
   display: block;
   width: 100%;
-  min-width: min(100%, 320px);
   height: auto;
 }
 .mermaid-fallback {

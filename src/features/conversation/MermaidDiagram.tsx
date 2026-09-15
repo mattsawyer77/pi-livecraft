@@ -1,7 +1,8 @@
-import { useEffect, useId, useState } from 'react'
+import { useEffect, useId, useState, type CSSProperties } from 'react'
 import { CopyablePre } from './CodeBlock.tsx'
 import {
   hasElkLayout,
+  mermaidDiagramWidth,
   mermaidFailureMessage,
   mermaidRenderConfig,
 } from './mermaid.ts'
@@ -96,5 +97,12 @@ export function MermaidDiagram({ onError, copyablePre = false, source }: Mermaid
     )
   }
 
-  return <div className='mermaid-diagram' dangerouslySetInnerHTML={{ __html: svg }} />
+  return (
+    <div
+      className='mermaid-diagram'
+      style={{ '--mermaid-diagram-width': `${mermaidDiagramWidth(svg)}px` } as CSSProperties}
+    >
+      <div dangerouslySetInnerHTML={{ __html: svg }} />
+    </div>
+  )
 }
