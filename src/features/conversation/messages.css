@@ -216,8 +216,12 @@
   text-decoration: underline;
 }
 .user .content pre {
-  border-color: color-mix(in srgb, var(--surface) 13%, transparent);
-  background: color-mix(in srgb, var(--canvas) 60%, var(--ink));
+  border-color: color-mix(in srgb, var(--surface) 30%, transparent);
+  background: color-mix(in srgb, var(--surface) 30%, var(--accent));
+  color: var(--on-accent);
+}
+.user .content pre > code {
+  color: var(--on-accent) !important;
 }
 .pending-steering .content pre {
   border-color: var(--line);

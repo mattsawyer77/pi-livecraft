@@ -269,7 +269,7 @@ button:disabled, select:disabled {
     background: var(--surface-raised);
   }
   .user .content pre {
-    background: color-mix(in srgb, var(--canvas) 80%, var(--ink));
+    background: color-mix(in srgb, var(--surface) 30%, var(--accent));
   }
   .tool-call {
     border-color: var(--line-strong);
