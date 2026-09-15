@@ -31,12 +31,20 @@ export function hasElkLayout(source: string): boolean {
 }
 
 export function mermaidRenderConfig(theme: 'dark' | 'default'): {
+  flowchart: {
+    htmlLabels: false
+  }
+  htmlLabels: false
   securityLevel: 'strict'
   startOnLoad: false
   suppressErrorRendering: true
   theme: 'dark' | 'default'
 } {
   return {
+    flowchart: {
+      htmlLabels: false,
+    },
+    htmlLabels: false,
     securityLevel: 'strict',
     startOnLoad: false,
     suppressErrorRendering: true,

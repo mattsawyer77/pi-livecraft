@@ -54,6 +54,10 @@ test('uses a compact stable failure message', () => {
 
 test('uses restrictive Mermaid rendering settings', () => {
   assert.deepEqual(mermaidRenderConfig('dark'), {
+    flowchart: {
+      htmlLabels: false,
+    },
+    htmlLabels: false,
     securityLevel: 'strict',
     startOnLoad: false,
     suppressErrorRendering: true,
