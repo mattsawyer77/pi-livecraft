@@ -6,9 +6,6 @@ import {
   mermaidDiagramWidth,
   mermaidFailureMessage,
   mermaidRenderConfig,
-  mermaidRenderFallbackVisible,
-  mermaidRenderState,
-  mermaidRenderedSvg,
 } from '../src/features/conversation/mermaid.ts'
 
 test('recognizes only an explicit mermaid language class', () => {
@@ -24,22 +21,6 @@ test('detects explicit ELK layout requests', () => {
   assert.equal(hasElkLayout('flowchart-elk TD\nA --> B'), true)
   assert.equal(hasElkLayout('flowchart TD\nA --> B'), false)
   assert.equal(hasElkLayout('flowchart TD\nA --> elk'), false)
-})
-
-test('keeps the source fallback visible until direct rendering succeeds', () => {
-  assert.equal(mermaidRenderFallbackVisible('loading'), true)
-  assert.equal(mermaidRenderFallbackVisible('error'), true)
-  assert.equal(mermaidRenderFallbackVisible('rendered'), false)
-})
-
-test('commits Mermaid output into the stable visible target', () => {
-  assert.equal(mermaidRenderedSvg('<svg><g /></svg>'), '<svg><g /></svg>')
-})
-
-test('keeps a successful render state separate from the fallback state', () => {
-  assert.equal(mermaidRenderState(undefined, undefined), 'loading')
-  assert.equal(mermaidRenderState(undefined, new Error('invalid')), 'error')
-  assert.equal(mermaidRenderState('<svg></svg>', undefined), 'rendered')
 })
 
 test('preserves readable intrinsic width for rendered diagrams', () => {

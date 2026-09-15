@@ -1,19 +1,4 @@
 export const mermaidFailureMessage = 'Mermaid could not be rendered.'
-export function mermaidRenderFallbackVisible(state: 'loading' | 'error' | 'rendered'): boolean {
-  return state !== 'rendered'
-}
-
-export function mermaidRenderedSvg(svg: string): string {
-  return svg
-}
-
-export function mermaidRenderState(
-  svg: string | undefined,
-  error: unknown,
-): 'loading' | 'error' | 'rendered' {
-  if (error) return 'error'
-  return svg ? 'rendered' : 'loading'
-}
 
 export function mermaidDiagramWidth(svg: string): number {
   const viewBoxWidth = /\bviewBox=["']\s*[-\d.]+\s+[-\d.]+\s+([-\d.]+)/.exec(svg)?.[1]

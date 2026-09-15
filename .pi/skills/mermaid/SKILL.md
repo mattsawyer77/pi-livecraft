@@ -1,14 +1,14 @@
 ---
 name: mermaid
-description: Use when presenting diagrams in Markdown responses or Markdown documents.
+description: Use when presenting diagrams in Markdown responses or documents.
 ---
 
 # Mermaid diagrams
 
-- Put diagrams in explicit fenced Markdown blocks beginning with `mermaid`.
-- Embed Mermaid fences inside explanatory Markdown when prose or headings help the reader.
-- Prefer valid, reasonably scoped diagrams and split very large diagrams when that improves readability.
-- For dense, hierarchical, or heavily connected diagrams, request the open-source ELK layout with Mermaid config frontmatter:
+- Use an explicit `mermaid` fenced block.
+- Embed the fence in explanatory Markdown when useful.
+- Keep diagrams valid and reasonably scoped; split very large diagrams when that improves readability.
+- For dense or highly connected flowcharts, request ELK with frontmatter:
 
   ```mermaid
   ---
@@ -19,5 +19,4 @@ description: Use when presenting diagrams in Markdown responses or Markdown docu
     A --> B
   ```
 
-- Use ELK only when it improves readability; not every Mermaid diagram type supports every layout.
-- Do not assume Mermaid rendering is available outside the current Markdown renderer.
+- Use ELK when it improves readability; not every Mermaid diagram type supports every layout.

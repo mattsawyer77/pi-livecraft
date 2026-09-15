@@ -9,7 +9,7 @@ Render Mermaid diagrams in the browser wherever Pi Livecraft renders Markdown, m
 - Recognize only explicit fenced code blocks marked `language-mermaid` (written as ` ```mermaid ` in Markdown).
 - Render Mermaid blocks as static, responsive SVGs in place within surrounding Markdown.
 - Preserve all surrounding Markdown content, including headings, paragraphs, lists, and additional code blocks.
-- Support Mermaid's optional open-source ELK layout integration for diagrams that request `layout: elk`.
+- Support Mermaid's optional open-source ELK layout integration for diagrams that request `layout: elk` or use `flowchart-elk`.
 - Keep ordinary code blocks unchanged.
 - Do not add pan, zoom, node-click actions, or other diagram interactivity in v1.
 - A nested Mermaid fence inside another code fence remains source text and is not rendered.
@@ -31,9 +31,9 @@ ReactMarkdown
             └─ existing MarkdownCode
 ```
 
-The custom Markdown `code` renderer routes exactly `language-mermaid` blocks to a new `MermaidDiagram` component. All other blocks continue through the existing code rendering and lazy syntax-highlighting path. Because conversation messages and Markdown tool/file previews already share `Markdown`, no separate surface-specific implementation is needed.
+The custom Markdown `code` renderer routes exactly `language-mermaid` blocks to `MermaidDiagram`. All other blocks continue through the existing code rendering and lazy syntax-highlighting path. Because conversation messages and Markdown tool/file previews already share `Markdown`, no separate surface-specific implementation is needed.
 
-`MermaidDiagram` should lazy-load Mermaid and the ELK integration so ordinary Markdown does not pay the diagram-rendering cost in the initial bundle. Package versions and the exact registration API must be verified against current package metadata before implementation.
+`MermaidDiagram` lazy-loads Mermaid and registers the ELK layout loaders only for diagrams that request ELK. It renders into one visible target, then places Mermaid's returned SVG in that same target so flowchart geometry and the final DOM stay aligned.
 
 ## Layout and theme
 
@@ -59,9 +59,9 @@ The generated SVG should use the current application theme and be constrained re
 
 Diagram content is untrusted Markdown content:
 
-- Configure Mermaid with restrictive security settings, avoiding arbitrary HTML and unsafe link behavior by default.
-- Insert Mermaid's generated SVG only; never insert the original diagram source as HTML.
-- Generate a stable collision-resistant render ID for each diagram so multiple diagrams can coexist.
+- Configure Mermaid with restrictive security settings, disable HTML labels for reliable flowchart measurement, and avoid unsafe link behavior by default.
+- Insert only Mermaid's generated SVG; never insert the original diagram source as HTML.
+- Generate a per-instance render ID so multiple diagrams can coexist.
 - Keep fallback content in a normal `<pre><code>` block for safe display and copyability.
 
 When rendering fails because syntax is invalid, content is incomplete during streaming, or ELK cannot process the requested layout:
@@ -78,7 +78,7 @@ Add a project skill document under `.pi/skills/` that teaches Pi to:
 - Use explicit ` ```mermaid ` fences for diagrams.
 - Embed those fences naturally inside explanatory Markdown when appropriate.
 - Prefer valid, reasonably scoped Mermaid syntax.
-- Use `config.layout: elk` for dense, hierarchical, or heavily connected diagrams where it improves readability.
+- Use `config.layout: elk` or `flowchart-elk` for dense, hierarchical, or heavily connected flowcharts where it improves readability.
 - Avoid assuming that every Mermaid feature or diagram type supports ELK.
 - Split very large diagrams when that produces a clearer result.
 
@@ -91,7 +91,7 @@ Focused tests or equivalent browser-level checks must cover:
 - Explicit Mermaid fence recognition.
 - Ordinary code blocks remaining ordinary code blocks.
 - Mermaid embedded among headings, prose, and other Markdown.
-- Successful static SVG rendering.
+- Successful static SVG rendering for flowcharts and sequence diagrams.
 - Invalid/incomplete syntax preserving the original source with an error indicator.
 - The ELK configuration path.
 - Multiple diagrams coexisting without ID collisions.

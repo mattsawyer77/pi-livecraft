@@ -4,7 +4,6 @@ import {
   hasElkLayout,
   mermaidDiagramWidth,
   mermaidFailureMessage,
-  mermaidRenderedSvg,
   mermaidRenderConfig,
 } from './mermaid.ts'
 
@@ -79,7 +78,7 @@ export function MermaidDiagram({ onError, copyablePre = false, source }: Mermaid
       .then((mermaid) => mermaid.render(renderId(id), source, renderTarget))
       .then(({ svg: renderedSvg }) => {
         if (cancelled) return
-        renderTarget.innerHTML = mermaidRenderedSvg(renderedSvg)
+        renderTarget.innerHTML = renderedSvg
         renderTarget.style.setProperty('--mermaid-diagram-width', `${mermaidDiagramWidth(renderedSvg)}px`)
         if (fallbackRef.current) fallbackRef.current.hidden = true
       })
