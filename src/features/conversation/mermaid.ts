@@ -3,6 +3,10 @@ export function mermaidRenderFallbackVisible(state: 'loading' | 'error' | 'rende
   return state !== 'rendered'
 }
 
+export function mermaidRenderedSvg(svg: string): string {
+  return svg
+}
+
 export function mermaidRenderState(
   svg: string | undefined,
   error: unknown,
